@@ -1,6 +1,8 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const {hashPassword,generateRandomString,comparePassword}=require('../utils/auth.utils')
+const Email =require('../utils/Email')
+
 const UserController = {
     userRegister: async (req, res) => {
         try {
@@ -18,7 +20,7 @@ const UserController = {
                 password: securedPassword,
                 verifyToken: generateRandomString(20)
             });
-
+            await  Email.sendZeptoMail(email,'Gtcscan - Verify your email address',{verifyToken:user.verifyToken})
             res.status(200).json({ success: true, user });
         } catch (error) {
             console.error(error);
