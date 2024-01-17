@@ -1,9 +1,11 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const {hashPassword,generateRandomString,comparePassword}=require('../utils/auth.utils')
-const Email =require('../utils/Email')
+const {sendEmail} =require('../utils/Email')
 
 const UserController = {
+
+    //Signup
     userRegister: async (req, res) => {
         try {
             const { username, email, password, confirmPassword } = req.body;
@@ -20,7 +22,8 @@ const UserController = {
                 password: securedPassword,
                 verifyToken: generateRandomString(20)
             });
-            await  Email.sendZeptoMail(email,'Gtcscan - Verify your email address',{verifyToken:user.verifyToken})
+           await sendEmail(email,'Gtcscan - Verify your email address',user.verifyToken)
+            // console.log(sendmail);
             res.status(200).json({ success: true, user });
         } catch (error) {
             console.error(error);
@@ -28,6 +31,8 @@ const UserController = {
         }
     },
 
+
+    //Signin
     userLogin: async (req, res) => {
         const { email, password } = req.body;
 
@@ -45,6 +50,34 @@ const UserController = {
             res.status(500).json({ message: "Internal Server Error" });
         }
     },
+
+
+    //account verification by token
+
+    accountVerify:async(req,res)=>{
+    const  {verifyToken}=req.body
+    try {
+        const user= await  User.findOne({verifyToken})
+        if(!user){
+            res.status(404).json({message:"User not found"})
+        }
+        if(user.isVerified){
+            return res.status(200).json({message:"User is already verified"})
+        }
+
+        user.isVerified=true;
+        await user.save();
+        res.status(200).json({message:"User Verified"})
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message:"Internal server error"})
+    }
+    },
+
+
+
+
+
 
     userDelete: async (req, res) => {
         const userId = req.params.id;

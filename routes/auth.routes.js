@@ -6,6 +6,6 @@ const {registrationValidation,loginValidation}=require('../middleware/validateRo
 router.post('/signup',[registrationValidation],userController.userRegister)
 router.post('/login',[loginValidation],userController.userLogin)
 router.post('/delete/:id',userController.userDelete)
-
+router.post('/account-verify',userController.accountVerify)
 
 module.exports=router
