@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema({
   verifyToken: {
     type: String
   },
+  resetOtp:{
+    type:Number
+  },
+  resetOtpExpiresIn:{
+    type:Date
+  },
   tokenTime: {
     type: Date,
     default: Date.now,
