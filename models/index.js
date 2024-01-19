@@ -1,7 +1,7 @@
-
-
 const mongoose=require("mongoose")
-let mongourl = 'mongodb+srv://gtcscan:Xxz483OZQ16oF759@db-mongodb-sgp1-84853-9ffebb5c.mongo.ondigitalocean.com/blcscan?tls=true&authSource=admin&replicaSet=db-mongodb-sgp1-84853';
+require('dotenv').config();
+
+let mongourl=process.env.MONGOURL
 
 
 async function db(){
