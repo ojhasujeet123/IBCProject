@@ -60,6 +60,7 @@ async function userVerified(req, res, user) {
         if (Date.now() - tokenTime <= tokenExpiration) {
             // Set verified account
             user.isVerified = true
+            user.verifyToken = undefined
             await user.save();
             // console.log(user);
             res.status(200).json({ message: "User Verified", user });
@@ -74,7 +75,7 @@ async function userVerified(req, res, user) {
 
 //Forgot password Handle
 
-async function forgotHandle(res,user,email){
+async function forgotHandle(res, user, email) {
     const otp = generateOTP()
     user.resetOtp = otp;
     user.resetOtpExpiresIn = Date.now() + 10 * 60 * 1000

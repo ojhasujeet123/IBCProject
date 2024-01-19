@@ -19,7 +19,7 @@ function sendEmail(email, otp, type) {
     });
 
     // Based on type send mail
-    
+
     let subject, emailHTML;
     if (type === 'forgot-password') {
       subject = "Password Reset ";
