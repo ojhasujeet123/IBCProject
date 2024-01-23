@@ -1,17 +1,16 @@
 const User = require('../models/user.model');
-const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/Email')
 const jwt = require('jsonwebtoken')
 require('dotenv').config();
-// const jwtsecret = process.env.JWTSECRETKEY
+const jwtsecret = process.env.JWTSECRETKEY
+const time = process.env.VERIFICATIONTIMEOUT
 const { hashPassword,
     comparePassword,
     userVerified,
     forgotHandle,
-    generateOTP
+    generateOTP,
+    deleteUnverifiedUser
 } = require('../utils/auth.utils')
-
-
 
 
 
@@ -29,9 +28,7 @@ const UserController = {
 
             const securedPassword = await hashPassword(password);
 
-
             //user create
-
             const user = await User.create({
                 username,
                 email,
@@ -40,17 +37,27 @@ const UserController = {
 
             });
 
-
             //Email send for account verification
-
             await sendEmail(email, user.verifyToken, "accountVerification")
 
-            res.status(200).json({ success: true, user });
+            // if account not verified data stored in database for 5 minutes
+            setTimeout(async () => {
+                await deleteUnverifiedUser(user)
+            }, time)
+
+            res.status(200).json({  success: true, 
+                                    user ,
+                                    message:"One time password successfully sent on your email"
+                                });
         } catch (error) {
             console.error(error);
             next(error);
         }
     },
+
+
+
+
 
     //Verification by token
     verifyAccount: async (req, res, next) => {
@@ -58,16 +65,13 @@ const UserController = {
         try {
             const user = await User.findOne({ email });
 
-            // const user = await User.findOne({ email: req.query.email });
-            // const verifyToken = req.query.verifytoken;
             if (!user) {
                 return res.status(400).json({ message: "User not found" })
             }
 
             if (user.verifyToken === otp && !user.isVerified) {
-
                 //verification function call
-                userVerified(req, res, user);
+                userVerified(res, user);
 
             } else {
                 res.status(400).json({ message: "Invalid account or user already verified" });
@@ -77,6 +81,29 @@ const UserController = {
             next(error);
         }
     },
+
+
+
+
+    //rsend verification otp
+
+    resendVerification:async(req,res,next)=>{
+        const email=req.query.email
+        try {
+            const user= await User.findOne({email})
+            if(!user){
+                return res.status(400).json({message:"User not found"})
+            }
+            const newOtp=generateOTP()
+            await user.save()
+            await sendEmail(email,newOtp,"accountVerification")
+            res.status(200).json({message:"Otp Send Successfully"})
+        } catch (error) {
+            console.error(error);
+            next(error)
+        }
+    },
+
 
     //Signin
     userLogin: async (req, res, next) => {
@@ -90,17 +117,16 @@ const UserController = {
 
             const isPasswordValid = await comparePassword(password, user.password);
 
-
             if (!isPasswordValid) {
                 return res.status(401).json({ message: "Invalid email or password" });
             }
 
-            const token = jwt.sign({ userId: user._id }, process.env.JWTSECRETKEY, { expiresIn: '2h' })
-
+            const token = jwt.sign({ userId: user._id }, jwtsecret, { expiresIn: '2h' })
 
             res.status(200).json({
                 success: true,
                 token,
+                user,
                 message: 'User Logged in Successfully'
             });
         } catch (error) {
@@ -110,15 +136,12 @@ const UserController = {
     },
 
 
-    //signout
-    userSignout: async (req, res, next) => {
-        try {
-            res.status(200).json({ success: true, message: "User signed out" });
-        } catch (error) {
-            console.error(error);
-            next(error);
-        }
-    },
+
+
+
+
+
+
 
     //forgot password
 
@@ -138,19 +161,25 @@ const UserController = {
     },
 
 
+
+
+
+
     //reset password
     resetPassword: async (req, res, next) => {
         try {
             const { otp, newpassword, confirmpassword } = req.body
 
             const user = await User.findOne({ email: req.query.email });
+
             if (!user || user.resetOtp !== otp || user.resetOtpExpiresIn < Date.now()) {
                 return res.status(400).json({ message: "Invalid or expired otp" })
             }
+
             if (newpassword !== confirmpassword) {
                 return res.status(400).json({ message: "Password do not match" })
             }
-            console.log(newpassword);
+            // console.log(newpassword);
             const securedPassword = await hashPassword(newpassword)
             //update password 
             user.password = securedPassword
@@ -158,12 +187,15 @@ const UserController = {
             delete user.resetOtpExpiresIn
 
             await user.save()
+            await sendEmail(user.email, " ", "password reset")
+
             res.status(200).json({ message: "Password updated successfully" })
         } catch (error) {
             console.error(error);
             next(error)
         }
     },
+
 
 
     //Get user profile

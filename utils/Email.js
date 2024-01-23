@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 function sendEmail(email, otp, type) {
+
   try {
     if (!email || !otp || !type) {
       throw new Error("Email, otp, and type are required for sending an email");
@@ -27,7 +28,10 @@ function sendEmail(email, otp, type) {
     } else if (type === 'accountVerification') {
       subject = "Verify your account ";
       emailHTML = generateVerificationHTML(otp);
-    } else {
+    } else if(type === "password reset"){
+          subject="Password Updated Successfully",
+          emailHTML=generatePasswordReset()
+    }else {
       throw new Error("Invalid email type");
     }
 
@@ -124,4 +128,36 @@ function generateVerificationHTML(otp) {
   `;
 }
 
-module.exports = { sendEmail };
+
+// Password Reset Success HTML Template
+function generatePasswordReset() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset Success</title>
+    </head>
+    <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+            <h2>Password Reset Successful</h2>
+            <p>
+                Hello,<br>
+                Your password has been successfully reset. You can now use your new password to log in to your account.
+            </p>
+            <p>
+                If you did not perform this action, please contact our support team immediately.
+            </p>
+            <p>
+                Regards,<br>
+                <i>Sujeet Kumar Ojha</i>
+            </p>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+
+module.exports = { sendEmail};

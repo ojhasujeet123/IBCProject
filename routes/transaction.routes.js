@@ -1,8 +1,9 @@
 const express=require('express')
 const router=express.Router()
-const getTransaction=require('../controllers/transaction.controller')
+const transactionController=require('../controllers/transaction.controller')
 
-router.get('/transaction',getTransaction)
+router.get('/transaction',transactionController.getTransaction)
+// router.get('/transaction',transactionController.getTransactionByHash)
 
 
 module.exports=router

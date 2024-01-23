@@ -7,7 +7,8 @@ const {registrationValidation,loginValidation,authTokenVerify}=require('../middl
 router.post('/signup',[registrationValidation],userController.userRegister)
 router.post('/login',[loginValidation],userController.userLogin)
 router.post('/account-verify',userController.verifyAccount)
-router.post('/logout',authTokenVerify,userController.userSignout)
+router.post('/verify-otp',userController.resendVerification)
+// router.post('/logout',authTokenVerify,userController.userSignout)
 router.post('/forgot-password',userController.forgotPassword)
 router.post('/reset-password',userController.resetPassword)
 
