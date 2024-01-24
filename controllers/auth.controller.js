@@ -40,15 +40,16 @@ const UserController = {
             //Email send for account verification
             await sendEmail(email, user.verifyToken, "accountVerification")
 
-            // if account not verified data stored in database for 5 minutes
+            // if account not verified data stored in database for 15 minutes
             setTimeout(async () => {
                 await deleteUnverifiedUser(user)
             }, time)
 
-            res.status(200).json({  success: true, 
-                                    user ,
-                                    message:"One time password successfully sent on your email"
-                                });
+            res.status(200).json({
+                success: true,
+                user,
+                message: "One time password successfully sent on your email"
+            });
         } catch (error) {
             console.error(error);
             next(error);
@@ -59,58 +60,51 @@ const UserController = {
 
 
 
-    //Verification by token
+
+    //verify account
+
     verifyAccount: async (req, res, next) => {
         const { email, otp } = req.body
-        try {
-            const user = await User.findOne({ email });
+        // const emailToResend=req.query.email || email
 
+        try {
+            let user = await User.findOne({ email })
             if (!user) {
-                return res.status(400).json({ message: "User not found" })
+                return res.status(400).json({ message: "User not exist with this email" })
             }
 
-            if (user.verifyToken === otp && !user.isVerified) {
-                //verification function call
-                userVerified(res, user);
-
+            if (otp) {
+                //verification logic
+                if (user.verifyToken === otp && !user.isVerified) {
+                    userVerified(res, user)
+                } else {
+                    res.status(400).json({ message: "Inavlid account or user already verified" })
+                }
             } else {
-                res.status(400).json({ message: "Invalid account or user already verified" });
+                const newOtp = generateOTP()
+                user.verifyToken = newOtp
+                await user.save()
+                await sendEmail(email, newOtp, "accountVerification")
+                res.status(200).json({ message: "Otp Resend Successfully" })
             }
-        } catch (error) {
-            console.error(error);
-            next(error);
-        }
-    },
 
-
-
-
-    //rsend verification otp
-
-    resendVerification:async(req,res,next)=>{
-        const email=req.query.email
-        try {
-            const user= await User.findOne({email})
-            if(!user){
-                return res.status(400).json({message:"User not found"})
-            }
-            const newOtp=generateOTP()
-            await user.save()
-            await sendEmail(email,newOtp,"accountVerification")
-            res.status(200).json({message:"Otp Send Successfully"})
         } catch (error) {
             console.error(error);
             next(error)
         }
-    },
+    }
+    ,
+
+
 
 
     //Signin
     userLogin: async (req, res, next) => {
-        const { email, password } = req.body;
 
         try {
+            const { email, password } = req.body;
             const user = await User.findOne({ email });
+
             if (!user) {
                 return res.status(400).json({ message: "User not found" })
             }
@@ -134,10 +128,6 @@ const UserController = {
             next(error);
         }
     },
-
-
-
-
 
 
 

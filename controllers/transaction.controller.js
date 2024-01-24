@@ -30,7 +30,8 @@ const transactionController = {
             }
             //By api 
             else {
-                const transactions = await Transactions.find({},{ from: 1, to: 1, hash: 1,createdAt:1, _id: 0 })
+                const transactions = await Transactions.find({})
+                .sort({timestamp:-1})
                     .skip(skip)
                     .limit(limit);
 
@@ -45,6 +46,42 @@ const transactionController = {
             next(error);
         }
     },
+
+    //Chart
+
+    getTransactionForChart:async(req,res,next)=>{
+        try {
+           const transactions= await Transactions.find({}) 
+           .sort({timestamp:1})
+           const chartData={}
+
+           transactions.forEach(transaction=>{
+            const date=new Date(transaction.timestamps)
+            const monthKey= `${date.getFullYear()}-${date.getMonth()+1}`
+
+            if(!chartData[monthKey]){
+                chartData[monthKey]=0
+            }
+            chartData[monthKey]++;
+           });
+
+           const chartLabels=Object.keys(chartData)
+           const chartValues=Object.values(chartData)
+           console.log(chartLabels);
+           console.log(chartValues);
+           res.status(200).json({chartLabels,chartValues})
+        } catch (error) {
+           console.error(error);
+           next(error) 
+        }
+    }
+
+
+
+
+    
+
+    
 };
 
 module.exports = transactionController;
