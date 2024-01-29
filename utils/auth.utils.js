@@ -65,7 +65,6 @@ async function userVerified(res, user) {
     try {
         const tokenTime = user.tokenTime || 0;
         const tokenExpiration = process.env.VERIFICATIONTIMEOUT
-        // const tokenExpiration = process.env.TOKENEXPIRE;
 
         if (Date.now() - tokenTime <= tokenExpiration) {
             // Set verified account

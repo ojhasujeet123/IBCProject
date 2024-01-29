@@ -48,9 +48,11 @@ const transactionController = {
             const today = new Date()
             today.setHours(0, 0, 0, 0)
             const transactions = await Transactions.find({})
-                .sort({ timestamp: -1 })
+                .sort({ timeStamp: -1 })
                 .skip(skip)
                 .limit(limit);
+
+             
 
             const totalTransactions = await Transactions.countDocuments({})
             let today_txns = await Transactions.find({ createdAt: { $gte: today, $lt: new Date(today.valueOf() + 86400000) } }).countDocuments()
@@ -67,7 +69,7 @@ const transactionController = {
                 updatedAt: new Date(transaction.updatedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
             }));
 
-            res.status(200).json({ totalTransactions, today_txns, transactions: transactionsIST });
+            res.status(200).json({totalTransactions, today_txns, transactions: transactionsIST });
         } catch (error) {
             console.error(error);
             next(error);
@@ -87,6 +89,8 @@ const transactionController = {
                 .sort({ timeStamp: 1 });
 
             const chartData = {};
+            const priceChartData={}
+            const avgGasPrice={}
 
             transactions.forEach(transaction => {
                 const date = new Date(transaction.timeStamp * 1000);
@@ -96,12 +100,27 @@ const transactionController = {
                     chartData[monthKey] = 0;
                 }
                 chartData[monthKey]++;
+
+
+                if(!priceChartData[monthKey]){
+                    priceChartData[monthKey]=0
+                }
+                priceChartData[monthKey] += transaction.value / 83
+
+                if(!avgGasPrice[monthKey]){
+                    avgGasPrice[monthKey]=0
+                }
+                avgGasPrice[monthKey] += transaction.gasPrice
+
             });
 
             const chartLabels = Object.keys(chartData);
             const chartValues = Object.values(chartData);
+            // const priceChartDataLabels=Object.keys(priceChartData)
+            const priceChartDataValues=Object.values(priceChartData)
+            const avgGasPriceValues=Object.values(avgGasPrice)
 
-            res.status(200).json({ chartLabels, chartValues });
+            res.status(200).json({ chartLabels, chartValues,  priceChartDataValues,avgGasPriceValues});
         } catch (error) {
             console.error(error);
             next(error);
