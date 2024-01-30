@@ -16,5 +16,6 @@ db.user = require("./user.model.js")
 db.transactions = require("./transactions.model.js") 
 db.currentBlock = require("./currentBlock.model.js") 
 db.api_key = require("./apikey.model.js")
+db.holder=require('./holder.model.js')
 
 module.exports=db;

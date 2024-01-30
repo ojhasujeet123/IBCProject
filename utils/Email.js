@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+
+//AUTHENTICATION RELATED EMAIL MESSAGE FUNCTION
 function sendEmail(email, otp, type) {
 
   try {
@@ -31,7 +33,8 @@ function sendEmail(email, otp, type) {
     } else if(type === "password reset"){
           subject="Password Updated Successfully",
           emailHTML=generatePasswordReset()
-    }else {
+    }
+    else {
       throw new Error("Invalid email type");
     }
 
@@ -160,4 +163,99 @@ function generatePasswordReset() {
 }
 
 
-module.exports = { sendEmail};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//QUERY SUBMISSION EMAIL
+function sendQuerySubmissionEmail(name, email, query) {
+  try {
+    if (!name || !email || !query) {
+      throw new Error("Name, email, and query are required for sending a query submission email");
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.AUTHEMAIL,
+        pass: process.env.EMAILPASS,
+      },
+    });
+
+    const subject = "Query Submission";
+    const emailHTML = generateQuerySubmissionHTML(name, email, query);
+
+    transporter.sendMail({
+      from: '"sujeet ojha" <sujeetjstech@gmail.com>',
+      to: email,
+      subject: subject,
+      html: emailHTML,
+    }).then(info => {
+      console.log("Query submission email sent");
+    }).catch(console.error);
+
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error sending query submission email");
+  }
+}
+
+function generateQuerySubmissionHTML(name, email, query) {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Query Submission</title>
+    </head>
+    <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+            <h2>Query Submission</h2>
+            <p>
+                Hello ${name},<br>
+                Thank you for reaching out to us with your query. We have received the following information:
+            </p>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Query:</strong> ${query}</p>
+            <p>
+                We will get back to you as soon as possible with a response to your query. If you have any additional information to provide, please feel free to reply to this email.
+            </p>
+            <p>
+                Thank you for your patience and understanding.
+            </p>
+            <p>
+                Regards,<br>
+                <i>Your Name or Company Name</i>
+            </p>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+
+
+
+
+module.exports = { sendEmail, sendQuerySubmissionEmail};
