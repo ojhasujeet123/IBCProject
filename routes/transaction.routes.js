@@ -1,7 +1,7 @@
 const express=require('express')
 const router=express.Router()
 const transactionController=require('../controllers/transaction.controller')
-const {tokenTransaction,getTransactionForChart, contactquery, accounts}=require('../controllers/main.controller')
+const {tokenTransaction,getTransactionForChart, contactquery, accounts,blocks,blockDetailByBlockNumber}=require('../controllers/main.controller')
 
 router.get('/tokentxns',tokenTransaction)
 
@@ -12,4 +12,7 @@ router.get('/transaction/address/:address',transactionController.getTransactionB
 
 router.post('/query',contactquery)
 router.get('/accounts',accounts)
+router.get('/blocks',blocks)
+router.get('/blocks/blocknum/:blocks',blockDetailByBlockNumber)
+
 module.exports=router

@@ -2,7 +2,9 @@ const Transactions = require('../models/transactions.model')
 const User = require('../models/user.model')
 const ContactQuery = require('../models/query.model')
 const Holders = require('../models/holder.model')
-const {sendQuerySubmissionEmail}=require('../utils/Email')
+const { sendQuerySubmissionEmail } = require('../utils/Email')
+
+
 
 //token transaction
 const tokenTransaction = async (req, res, next) => {
@@ -19,6 +21,7 @@ const tokenTransaction = async (req, res, next) => {
         next(error)
     }
 };
+
 
 
 
@@ -91,7 +94,7 @@ const accounts = async (req, res, next) => {
                 const totalTransactions = transactions ? transactions.length : 0;
 
                 //calculate transaction percentage
-                const transactionPercentage=((totalTransactions/accountHolder)*100).toFixed(2)
+                const transactionPercentage = ((totalTransactions / accountHolder) * 100).toFixed(2)
 
                 return { ...holder.toObject(), totalTransactions, transactionPercentage };
             })
@@ -103,6 +106,95 @@ const accounts = async (req, res, next) => {
         next(error);
     }
 }
+
+
+const blocks=async(req,res,next)=>{
+    try {
+        let page = req.query.page || 1;
+        let limit = req.query.limit ||10;
+
+        let countBlocks=await Transactions.find({}).countDocuments();
+        let blocks= await Transactions.find({}).select('blockNumber createdAt value').limit(limit).skip(parseInt((page - 1) * limit));
+        let blocksWithTransactions=await Promise.all(
+            blocks.map(async(block)=>{
+                const blocksData=await Transactions.find({blockNumber:block.blockNumber})
+                const totalBlocksData=blocksData ? blocksData.length:0
+                return {...block.toObject(),totalBlocksData}
+            })
+        );
+        res.status(200).json({countBlocks,blocks:blocksWithTransactions})
+    } catch (error) {
+        console.error(error);
+        next(error)
+    }
+}
+// const blocks = async (req, res, next) => {
+//     try {
+//         let page = req.query.page || 1;
+//         let limit = req.query.limit || 10;
+
+//         let countBlocks = await Transactions.find({}).countDocuments();
+//         let blocks = await Transactions.find({}).select('blockNumber createdAt value').limit(limit).skip(parseInt((page - 1) * limit));
+//         let blocksWithTransactions = await Promise.all(
+//             blocks.map(async (block) => {
+//                 const blocksData = await Transactions.find({ blockNumber: block.blockNumber })
+//                     .select('transactionData'); // Assuming 'transactionData' is the field in your model containing transaction information
+//                 const totalBlocksData = blocksData ? blocksData.length : 0;
+//                 return { ...block.toObject(), totalBlocksData, transactions: blocksData };
+//             })
+//         );
+//         res.status(200).json({ countBlocks, blocks: blocksWithTransactions });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+
+// }
+
+const blockDetailByBlockNumber = async (req, res, next) => {
+    try {
+        const blockNumber = req.params.blocks;
+
+        // Find the block details
+        const detailsOfSingleBlock = await Transactions.findOne({ blockNumber });
+        if (!detailsOfSingleBlock) {
+            return res.status(404).json({ message: "Block not found for the given block number" });
+        }
+
+        // Find all transactions associated with the block number
+        const blockTransactions = await Transactions.find({ blockNumber });
+
+        // Include transactions in the response
+        const response = {
+            detailsOfSingleBlock: detailsOfSingleBlock.toObject(),
+            blockTransactions: blockTransactions.map(transaction => transaction.toObject())
+
+        };
+
+        res.status(200).json(response);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+
+// const blockDetailByBlockNumber= async(req,res,next)=>{
+//     try{
+//     const detailsOfSingleBlock = await Transactions.findOne({ blockNumber: req.params.blocks });
+//         console.log(detailsOfSingleBlock);
+//     if (!detailsOfSingleBlock){
+//         return res.status(404).json({ message: "Transaction not found for the given hash" });
+//     }
+
+//     res.status(200).json({ detailsOfSingleBlock });
+// } catch (error) {
+//     console.error(error);
+//     next(error);
+// }
+// }
+
+
 
 
 
@@ -126,7 +218,7 @@ const contactquery = async (req, res, next) => {
         })
 
         await newContactQuery.save()
-        await sendQuerySubmissionEmail(name,email,"general Inquiry")
+        await sendQuerySubmissionEmail(name, email, "general Inquiry")
         res.status(200).json({ newContactQuery, message: "Contact query saved successfully" })
     } catch (error) {
         console.error(error);
@@ -138,5 +230,7 @@ module.exports = {
     tokenTransaction,
     getTransactionForChart,
     contactquery,
-    accounts
+    accounts,
+    blocks,
+    blockDetailByBlockNumber
 }
