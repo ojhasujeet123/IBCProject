@@ -4,59 +4,60 @@ const Holders=require('../models/holder.model')
 const transactionController = {
 
 //GET ALL  TRANSACTION
-getAllTransactions: async (req, res, next) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = req.query.limit || 10;
 
+
+
+
+
+getAllTransactions: async (req, res, next) => {
     try {
+        const { page = 1, limit = 10 } = req.query;
         const skip = (page - 1) * limit;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Find transactions for the last 24 hours
-        const yesterday = new Date(today.getTime() - 86400000); // 24 hours ago
-        const today_txns = await Transactions.find({
-            createdAt: { $gte: yesterday, $lt: today }
-        });
-        
-        // Calculate last 24 hrs transaction amount
-        const lastOneDayTxn = today_txns.reduce((sum, txn) => {
-            return sum + parseInt(txn.value);
-        }, 0);
+        const [transactions, totalBlocksNumber, accountHolder, totalTransactions, totalAmountResult] = await Promise.all([
+            Transactions.find({})
+                .sort({ timeStamp: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Transactions.distinct('blockNumber'),
+            Holders.countDocuments({}),
+            Transactions.countDocuments({}),
+            Transactions.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalAmount: {
+                            $sum: {
+                                $toDecimal: "$value"
+                            }
+                        }
+                    }
+                }
+            ]).exec(),
+        ]);
 
-        // Calculate last one hour transaction amount
-        const lastOneHour = new Date(today.getTime() - 60 * 60 * 1000); // One hour ago
-        const lastOneHour_txns = await Transactions.find({
-            createdAt: { $gte: lastOneHour, $lt: today }
-        });
+        const totalBlocks = totalBlocksNumber.length;
 
-        const lastOneHourTxn = lastOneHour_txns.reduce((sum, txn) => {
-            return sum + parseInt(txn.value);
-        }, 0);
-
-        // Convert timestamps to IST format
-        const transactions = await Transactions.find({})
-            .sort({ timeStamp: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const accountHolder = await Holders.find({}).countDocuments({});
-        const totalTransactions = await Transactions.countDocuments({});
+        const convertToIST = (timestamp) => new Date(timestamp * 1000).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
         const transactionsIST = transactions.map(transaction => ({
-            ...transaction._doc,
-            timestamp: new Date(transaction.timeStamp * 1000).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-            createdAt: new Date(transaction.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-            updatedAt: new Date(transaction.updatedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+            ...transaction,
+            timestamp: convertToIST(transaction.timeStamp),
+            createdAt: convertToIST(transaction.createdAt),
+            updatedAt: convertToIST(transaction.updatedAt),
         }));
 
+        const totalAmount = totalAmountResult[0]?.totalAmount || 0;
+
         res.status(200).json({
-            lastOneDayTxn,
-            lastOneHourTxn,
+            totalAmount,
+            totalBlocks,
             accountHolder,
             totalTransactions,
-            today_txns: today_txns.length,
             transactions: transactionsIST
         });
     } catch (error) {
@@ -69,17 +70,6 @@ getAllTransactions: async (req, res, next) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-    // GET TRANSACTION BY HASH
     getTransactionByHash: async (req, res, next) => {
         try {
             const transactionOfSingleUser = await Transactions.findOne({ hash: req.params.hash });
@@ -120,10 +110,6 @@ getAllTransactions: async (req, res, next) => {
         }
     },   
 };
-
-
-
-
 
 
 
