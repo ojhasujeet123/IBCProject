@@ -3,6 +3,7 @@ const User = require('../models/user.model')
 const ContactQuery = require('../models/query.model')
 const Holders = require('../models/holder.model')
 const { sendQuerySubmissionEmail } = require('../utils/Email')
+const { getElapsedTime } = require('../utils/auth.utils')
 
 
 
@@ -19,7 +20,12 @@ const tokenTransaction = async (req, res, next) => {
         if (!contractTranasaction) {
             return res.atatus(400).json({ message: "Token transactions not found of this block number" })
         }
-        res.status(200).json({ contractTransactionCount, contractTranasaction })
+        const transactionsWithElapsedTime = contractTranasaction.map(transaction => {
+            const createdElapsedTime = getElapsedTime(transaction.createdAt);
+            const updatedElapsedTime = getElapsedTime(transaction.updatedAt);
+            return { ...transaction.toObject(), createdElapsedTime, updatedElapsedTime };
+        });
+        res.status(200).json({ contractTransactionCount, contractTranasaction:transactionsWithElapsedTime })
     } catch (error) {
         console.error(error);
         next(error)
@@ -140,7 +146,7 @@ const accounts = async (req, res, next) => {
             };
         });
 
-        const accountHolder = holders.length;
+        const accountHolder = await Holders.find({}).countDocuments()
 
         res.status(200).json({ accountHolder, holders: holdersWithTransactions });
     } catch (error) {
@@ -155,12 +161,14 @@ const accounts = async (req, res, next) => {
 
 
 //BLOCKS
+
+
 const blocks = async (req, res, next) => {
     try {
         let { page = 1, limit = 10 } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
-        
+
         let countBlocks = await Transactions.distinct('blockNumber');
         let uniqueBlockNumbers = new Set();
         let blocksWithTransactions = [];
@@ -168,20 +176,22 @@ const blocks = async (req, res, next) => {
 
         while (blocksWithTransactions.length < limit && skipCount < countBlocks.length) {
             const blocksData = await Transactions.find({})
-                .select('blockNumber createdAt value')
+                .sort({updatedAt:-1})
+                .select('blockNumber createdAt updatedAt value')
                 .limit(limit - blocksWithTransactions.length)
                 .skip(parseInt((page - 1) * limit) + skipCount);
 
-            blocksData.forEach(async (block) => {
+            for (const block of blocksData) {
                 if (!uniqueBlockNumbers.has(block.blockNumber)) {
                     uniqueBlockNumbers.add(block.blockNumber);
 
                     const blocksData = await Transactions.find({ blockNumber: block.blockNumber });
                     const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
                     let blocksDataCount = blocksData.length;
-                    blocksWithTransactions.push({ ...block.toObject(), totalValue, blocksDataCount });
+                    const elapsedTime= getElapsedTime(block.createdAt)
+                    blocksWithTransactions.push({ ...block.toObject(), elapsedTime,totalValue, blocksDataCount });
                 }
-            });
+            }
 
             skipCount += limit;
         }
@@ -192,6 +202,52 @@ const blocks = async (req, res, next) => {
         next(error);
     }
 };
+
+
+// const blocks = async (req, res, next) => {
+//     try {
+//         let { page = 1, limit = 10 } = req.query;
+//         page = parseInt(page);
+//         limit = parseInt(limit);
+
+//         const countBlocks = await Transactions.distinct('blockNumber');
+
+//         const uniqueBlockNumbers = new Set();
+//         const blocksWithTransactions = [];
+
+//         const skipCount = (page - 1) * limit;
+
+//         const blocksData = await Transactions.aggregate([
+//             { $sort: { updatedAt: -1 } },
+//             { $group: { _id: "$blockNumber", data: { $first: "$$ROOT" } } },
+//             { $skip: skipCount },
+//             // { $limit: limit },
+//         ]);
+
+//         await Promise.all(blocksData.map(async (block) => {
+//             const { blockNumber, createdAt, value } = block.data;
+
+//             if (!uniqueBlockNumbers.has(blockNumber)) {
+//                 uniqueBlockNumbers.add(blockNumber);
+
+//                 const blocksData = await Transactions.find({ blockNumber });
+//                 const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
+//                 const blocksDataCount = blocksData.length;
+//                 const elapsedTime = getElapsedTime(createdAt);
+
+//                 blocksWithTransactions.push({ blockNumber, createdAt, updatedAt: block.data.updatedAt, value, elapsedTime, totalValue, blocksDataCount });
+//             }
+//         }));
+
+//         res.status(200).json({ countBlocks: countBlocks.length, blocks: blocksWithTransactions });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
+
+
 
 
 

@@ -105,6 +105,30 @@ async function deleteUnverifiedUser(user) {
 }
 
 
+const getElapsedTime = (timestamp) => {
+    const now = new Date();
+    const diff = now - timestamp;
+
+    const years = Math.floor(diff / (365 * 24 * 60 * 60 * 1000));
+    const months = Math.floor(diff / (30 * 24 * 60 * 60 * 1000));
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+    const hours = Math.floor(diff / (60 * 60 * 1000));
+    const minutes = Math.floor(diff / (60 * 1000));
+
+    if (years > 0) {
+        return `${years} ${years > 1 ? 'years' : 'year'}`;
+    } else if (months > 0) {
+        return `${months} ${months > 1 ? 'months' : 'month'}`;
+    } else if (days > 0) {
+        return `${days} ${days > 1 ? 'days' : 'day'}`;
+    } else if (hours > 0) {
+        return `${hours} ${hours > 1 ? 'hours' : 'hour'}`;
+    } else if (minutes > 0) {
+        return `${minutes} ${minutes > 1 ? 'minutes' : 'minute'}`;
+    } else {
+        return 'Just now';
+    }
+};
 
 
 module.exports = {
@@ -114,5 +138,6 @@ module.exports = {
     userVerified,
     generateOTP,
     forgotHandle,
-    deleteUnverifiedUser
+    deleteUnverifiedUser,
+    getElapsedTime
 };

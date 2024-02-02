@@ -1,16 +1,16 @@
 const Transactions = require('../models/transactions.model');
 const Holders=require('../models/holder.model')
+const {getElapsedTime}=require('../utils/auth.utils')
+
 
 const transactionController = {
 
 //GET ALL  TRANSACTION
 
 
-
-
-
 getAllTransactions: async (req, res, next) => {
     try {
+        
         const { page = 1, limit = 10 } = req.query;
         const skip = (page - 1) * limit;
 
@@ -19,9 +19,9 @@ getAllTransactions: async (req, res, next) => {
 
         const [transactions, totalBlocksNumber, accountHolder, totalTransactions, totalAmountResult] = await Promise.all([
             Transactions.find({})
-                .sort({ timeStamp: -1 })
-                .skip(skip)
-                .limit(limit)
+                .sort({ updatedAt: -1 })
+                // .skip(skip)
+                // .limit(limit )
                 .lean(),
             Transactions.distinct('blockNumber'),
             Holders.countDocuments({}),
@@ -42,13 +42,11 @@ getAllTransactions: async (req, res, next) => {
 
         const totalBlocks = totalBlocksNumber.length;
 
-        const convertToIST = (timestamp) => new Date(timestamp * 1000).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-
         const transactionsIST = transactions.map(transaction => ({
             ...transaction,
-            timestamp: convertToIST(transaction.timeStamp),
-            createdAt: convertToIST(transaction.createdAt),
-            updatedAt: convertToIST(transaction.updatedAt),
+            timestamp: getElapsedTime(transaction.timeStamp),
+            createdAt: getElapsedTime(transaction.createdAt),
+            updatedAt: getElapsedTime(transaction.updatedAt),
         }));
 
         const totalAmount = totalAmountResult[0]?.totalAmount || 0;
@@ -65,9 +63,6 @@ getAllTransactions: async (req, res, next) => {
         next(error);
     }
 },
-
-
-
 
 
     getTransactionByHash: async (req, res, next) => {

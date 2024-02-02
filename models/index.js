@@ -5,8 +5,8 @@ let mongourl=process.env.MONGOURL
 
 async function db(){
     try{
-        await mongoose.connect(mongourl
-         );
+        await mongoose.connect(mongourl,
+        );
         console.log("Database Connected Successfully");
     }catch(error){
         console.error("Failed to connect Database",error)
