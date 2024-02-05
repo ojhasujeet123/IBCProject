@@ -14,8 +14,8 @@ const tokenTransaction = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         // const blockNumber = req.params.blockId
-        let contractTranasaction = await Transactions.find({ 'contractAddress': { $ne: null } }).sort({ "_id": 1 }) .skip(skip)
-        .limit(limit);
+        let contractTranasaction = await Transactions.find({ 'contractAddress': { $ne: null } }).sort({ "_id": 1 }).skip(skip)
+            .limit(limit);
         let contractTransactionCount = await Transactions.find({ 'contractAddress': { $ne: null } }).countDocuments({})
         if (!contractTranasaction) {
             return res.atatus(400).json({ message: "Token transactions not found of this block number" })
@@ -25,7 +25,7 @@ const tokenTransaction = async (req, res, next) => {
             const updatedElapsedTime = getElapsedTime(transaction.updatedAt);
             return { ...transaction.toObject(), createdElapsedTime, updatedElapsedTime };
         });
-        res.status(200).json({ contractTransactionCount, contractTranasaction:transactionsWithElapsedTime })
+        res.status(200).json({ contractTransactionCount, contractTranasaction: transactionsWithElapsedTime })
     } catch (error) {
         console.error(error);
         next(error)
@@ -52,33 +52,98 @@ const keyExtractor = (date) => `${date.getFullYear()}-${(date.getMonth() + 1)}-$
 
 
 //CHART DATA
+// const getTransactionForChart = async (req, res, next) => {
+//     try {
+//         const transactions = await Transactions.find({}).sort({ createdAt: -1 });
+
+//         const chartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + 1);
+//         const priceChartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
+//         const dailyGasPrice = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
+//         const avgGasPriceValues = calculateChartData(transactions, keyExtractor, (prevValue, gasPrice) => {
+//             if (!prevValue) {
+//                 prevValue = { totalGasPrice: 0, transactionCount: 0 };
+//             }
+//             const gasPriceGwei = gasPrice / 1e9;
+//             prevValue.totalGasPrice += gasPriceGwei;
+//             prevValue.transactionCount++;
+//             return prevValue;
+//         });
+
+//         const chartLabels = Object.keys(chartData);
+//         const chartValues = Object.values(chartData);
+//         const priceChartDataValues = Object.values(priceChartData);
+//         const dailyGasPriceValues = Object.values(dailyGasPrice);
+//         const avgGasPriceValuesList = Object.keys(avgGasPriceValues).map(monthKey => {
+//             const average = avgGasPriceValues[monthKey].totalGasPrice / avgGasPriceValues[monthKey].transactionCount;
+//             return isNaN(average) ? 0 : average;
+//         });
+//         const chart={
+//             chartLabels,
+//             chartValues,
+//             priceChartDataValues,
+//             avgGasPriceValues:avgGasPriceValuesList,
+//             dailyGasPriceValues
+//         }
+//         // res.status(200).json({ chartLabels, chartValues, priceChartDataValues, avgGasPriceValues: avgGasPriceValuesList, dailyGasPriceValues });
+//         res.status(200).json({ chart });
+
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
+
+
+
 const getTransactionForChart = async (req, res, next) => {
     try {
-        const transactions = await Transactions.find({}).sort({ timeStamp: 1 });
+        const transactions = await Transactions.aggregate([
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            format: "%Y-%m-%d",
+                            date: "$createdAt"
+                        }
+                    },
+                    count: { $sum: 1 },
+                    totalValue: {
+                        $sum: {
+                            $convert: {
+                                input: "$value",
+                                to: "long",
+                                onError: 0,
+                                onNull: 0
+                            }
+                        }
+                    },
+                    totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
+                    transactionCount: { $sum: 1 },
+                }
+            },
+            {
+                $project: {
+                    chartLabels: "$_id",
+                    chartValues: "$count",
+                    priceChartDataValues: { $divide: ["$totalValue", 83] },
+                    dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
+                    avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] }
+                }
+            },
+            { $sort: { chartLabels: -1 } }
+        ]);
 
-        const chartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + 1);
-        const priceChartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
-        const dailyGasPrice = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
-        const avgGasPriceValues = calculateChartData(transactions, keyExtractor, (prevValue, gasPrice) => {
-            if (!prevValue) {
-                prevValue = { totalGasPrice: 0, transactionCount: 0 };
-            }
-            const gasPriceGwei = gasPrice / 1e9;
-            prevValue.totalGasPrice += gasPriceGwei;
-            prevValue.transactionCount++;
-            return prevValue;
-        });
+        const chart = {
+            chartLabels: transactions.map(entry => entry.chartLabels),
+            chartValues: transactions.map(entry => entry.chartValues),
+            priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
+            dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
+            avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+        };
 
-        const chartLabels = Object.keys(chartData);
-        const chartValues = Object.values(chartData);
-        const priceChartDataValues = Object.values(priceChartData);
-        const dailyGasPriceValues = Object.values(dailyGasPrice);
-        const avgGasPriceValuesList = Object.keys(avgGasPriceValues).map(monthKey => {
-            const average = avgGasPriceValues[monthKey].totalGasPrice / avgGasPriceValues[monthKey].transactionCount;
-            return isNaN(average) ? 0 : average;
-        });
-
-        res.status(200).json({ chartLabels, chartValues, priceChartDataValues, avgGasPriceValues: avgGasPriceValuesList, dailyGasPriceValues });
+        res.status(200).json({ chart });
     } catch (error) {
         console.error(error);
         next(error);
@@ -89,11 +154,6 @@ const getTransactionForChart = async (req, res, next) => {
 
 
 
-
-
-
-
-//ACCOUNTS
 const accounts = async (req, res, next) => {
     try {
         let page = req.query.page || 1;
@@ -163,6 +223,46 @@ const accounts = async (req, res, next) => {
 //BLOCKS
 
 
+// const blocks = async (req, res, next) => {
+//     try {
+//         let { page = 1, limit = 10 } = req.query;
+//         page = parseInt(page);
+//         limit = parseInt(limit);
+
+//         let countBlocks = await Transactions.distinct('blockNumber');
+//         let uniqueBlockNumbers = new Set();
+//         let blocksWithTransactions = [];
+//         let skipCount = 0;
+
+//         while (blocksWithTransactions.length < limit && skipCount < countBlocks.length) {
+//             const blocksData = await Transactions.find({})
+//                 .sort({ updatedAt: -1 })
+//                 .select('blockNumber createdAt updatedAt value')
+//                 .limit(limit - blocksWithTransactions.length)
+//                 .skip(parseInt((page - 1) * limit) + skipCount);
+
+//             for (const block of blocksData) {
+//                 if (!uniqueBlockNumbers.has(block.blockNumber)) {
+//                     uniqueBlockNumbers.add(block.blockNumber);
+
+//                     const blocksData = await Transactions.find({ blockNumber: block.blockNumber });
+//                     const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
+//                     let blocksDataCount = blocksData.length;
+//                     const elapsedTime = getElapsedTime(block.createdAt)
+//                     blocksWithTransactions.push({ ...block.toObject(), elapsedTime, totalValue, blocksDataCount });
+//                 }
+//             }
+
+//             skipCount += limit;
+//         }
+
+//         res.status(200).json({ countBlocks: countBlocks.length, blocks: blocksWithTransactions });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
 const blocks = async (req, res, next) => {
     try {
         let { page = 1, limit = 10 } = req.query;
@@ -175,9 +275,8 @@ const blocks = async (req, res, next) => {
         let skipCount = 0;
 
         while (blocksWithTransactions.length < limit && skipCount < countBlocks.length) {
-            const blocksData = await Transactions.find({})
-                .sort({updatedAt:-1})
-                .select('blockNumber createdAt updatedAt value')
+            const blocksData = await Transactions.find({}, 'blockNumber createdAt value from gasUsed')
+                .sort({ updatedAt: -1 })
                 .limit(limit - blocksWithTransactions.length)
                 .skip(parseInt((page - 1) * limit) + skipCount);
 
@@ -185,11 +284,11 @@ const blocks = async (req, res, next) => {
                 if (!uniqueBlockNumbers.has(block.blockNumber)) {
                     uniqueBlockNumbers.add(block.blockNumber);
 
-                    const blocksData = await Transactions.find({ blockNumber: block.blockNumber });
+                    const blocksData = await Transactions.find({ blockNumber: block.blockNumber }, 'createdAt value')
                     const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
                     let blocksDataCount = blocksData.length;
-                    const elapsedTime= getElapsedTime(block.createdAt)
-                    blocksWithTransactions.push({ ...block.toObject(), elapsedTime,totalValue, blocksDataCount });
+                    const elapsedTime = getElapsedTime(block.createdAt)
+                    blocksWithTransactions.push({ ...block.toObject(), elapsedTime, totalValue, blocksDataCount });
                 }
             }
 
@@ -202,50 +301,6 @@ const blocks = async (req, res, next) => {
         next(error);
     }
 };
-
-
-// const blocks = async (req, res, next) => {
-//     try {
-//         let { page = 1, limit = 10 } = req.query;
-//         page = parseInt(page);
-//         limit = parseInt(limit);
-
-//         const countBlocks = await Transactions.distinct('blockNumber');
-
-//         const uniqueBlockNumbers = new Set();
-//         const blocksWithTransactions = [];
-
-//         const skipCount = (page - 1) * limit;
-
-//         const blocksData = await Transactions.aggregate([
-//             { $sort: { updatedAt: -1 } },
-//             { $group: { _id: "$blockNumber", data: { $first: "$$ROOT" } } },
-//             { $skip: skipCount },
-//             // { $limit: limit },
-//         ]);
-
-//         await Promise.all(blocksData.map(async (block) => {
-//             const { blockNumber, createdAt, value } = block.data;
-
-//             if (!uniqueBlockNumbers.has(blockNumber)) {
-//                 uniqueBlockNumbers.add(blockNumber);
-
-//                 const blocksData = await Transactions.find({ blockNumber });
-//                 const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
-//                 const blocksDataCount = blocksData.length;
-//                 const elapsedTime = getElapsedTime(createdAt);
-
-//                 blocksWithTransactions.push({ blockNumber, createdAt, updatedAt: block.data.updatedAt, value, elapsedTime, totalValue, blocksDataCount });
-//             }
-//         }));
-
-//         res.status(200).json({ countBlocks: countBlocks.length, blocks: blocksWithTransactions });
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
-
 
 
 
@@ -264,7 +319,7 @@ const blockDetailByBlockNumber = async (req, res, next) => {
 
         // Find all transactions associated with the block number
         const blockTransactions = await Transactions.find({ blockNumber });
-        let blockCount=blockTransactions.length
+        let blockCount = blockTransactions.length
         // Include transactions in the response
         const response = {
             detailsOfSingleBlock: detailsOfSingleBlock.toObject(),

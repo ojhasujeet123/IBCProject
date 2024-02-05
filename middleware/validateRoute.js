@@ -35,6 +35,13 @@ const loginValidation=[
     handleValidationErrors
 ]
 
+const accountVerifyValidation=[
+    check('email').isEmail().withMessage('Invalid email address'),
+    check('otp').isLength({min:6,max:24}),
+
+    handleValidationErrors
+
+]
 //Handle Internal server Error
 const errorHandler=(err,req,res,next)=>{
     console.error(err.stack);
@@ -64,5 +71,6 @@ const authTokenVerify=(req,res,next)=>{
 
 module.exports={registrationValidation,
                 loginValidation,
+                accountVerifyValidation,
                 errorHandler,
                 authTokenVerify}

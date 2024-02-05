@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 const User = require('../models/user.model');
-const { sendEmail } = require('./Email');
+const { sendEmail,sendForgotEmail } = require('./Email');
 
 
 
@@ -83,17 +83,25 @@ async function userVerified(res, user) {
 
 //Forgot password Handle
 
+// async function forgotHandle(res, user, email) {
+//     const otp = generateOTP()
+//     user.resetOtp = otp;
+//     user.resetOtpExpiresIn = Date.now() + parseInt(process.env.RESETOTPEXPIRESIN)
+//     await user.save();
+//     await sendEmail(email, otp, "forgot-password");
+//     res.status(200).json({ message: "otp sent successfully", user })
+
+// }
+
 async function forgotHandle(res, user, email) {
-    const otp = generateOTP()
-    user.resetOtp = otp;
-    user.resetOtpExpiresIn = Date.now() + parseInt(process.env.RESETOTPEXPIRESIN)
-    await user.save();
-    await sendEmail(email, otp, "forgot-password");
-    res.status(200).json({ message: "otp sent successfully", user })
+    // const otp = generateOTP()
+    // user.resetOtp = otp;
+    // user.resetOtpExpiresIn = Date.now() + parseInt(process.env.RESETOTPEXPIRESIN)
+    // await user.save();
+    await sendForgotEmail(email,user.username,`http://192.168.1.73:3000/ResetPassword`);
+    res.status(200).json({ message: "Link sent successfully", user })
 
 }
-
-
 
 
 async function deleteUnverifiedUser(user) {

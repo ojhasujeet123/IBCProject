@@ -16,12 +16,13 @@ getAllTransactions: async (req, res, next) => {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        let today_txns = await Transactions.find({ createdAt: { $gte: today, $lt: new Date(today.valueOf() + 86400000) } }).countDocuments()
 
         const [transactions, totalBlocksNumber, accountHolder, totalTransactions, totalAmountResult] = await Promise.all([
             Transactions.find({})
                 .sort({ updatedAt: -1 })
-                // .skip(skip)
-                // .limit(limit )
+                .skip(skip)
+                .limit(limit )
                 .lean(),
             Transactions.distinct('blockNumber'),
             Holders.countDocuments({}),
@@ -52,6 +53,7 @@ getAllTransactions: async (req, res, next) => {
         const totalAmount = totalAmountResult[0]?.totalAmount || 0;
 
         res.status(200).json({
+            today_txns,
             totalAmount,
             totalBlocks,
             accountHolder,
@@ -63,6 +65,9 @@ getAllTransactions: async (req, res, next) => {
         next(error);
     }
 },
+
+
+
 
 
     getTransactionByHash: async (req, res, next) => {

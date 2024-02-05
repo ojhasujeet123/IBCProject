@@ -78,7 +78,7 @@ const UserController = {
                 if (user.verifyToken === otp && !user.isVerified) {
                     userVerified(res, user)
                 } else {
-                    res.status(400).json({ message: "Inavlid account or user already verified" })
+                    res.status(400).json({ message: "Inavlid otp or user already verified" })
                 }
             } else {
                 const newOtp = generateOTP()
@@ -156,16 +156,46 @@ const UserController = {
 
 
     //reset password
+    // resetPassword: async (req, res, next) => {
+    //     try {
+    //         const { otp, newpassword, confirmpassword } = req.body
+
+    //         const user = await User.findOne({ email: req.query.email });
+
+    //         if (!user || user.resetOtp !== otp || user.resetOtpExpiresIn < Date.now()) {
+    //             return res.status(400).json({ message: "Invalid or expired otp" })
+    //         }
+
+    //         if (newpassword !== confirmpassword) {
+    //             return res.status(400).json({ message: "Password do not match" })
+    //         }
+    //         // console.log(newpassword);
+    //         const securedPassword = await hashPassword(newpassword)
+    //         //update password 
+    //         user.password = securedPassword
+    //         delete user.resetOtp
+    //         delete user.resetOtpExpiresIn
+
+    //         await user.save()
+    //         await sendEmail(user.email, " ", "password reset")
+
+    //         res.status(200).json({ message: "Password updated successfully" })
+    //     } catch (error) {
+    //         console.error(error);
+    //         next(error)
+    //     }
+    // },
+
     resetPassword: async (req, res, next) => {
         try {
-            const { otp, newpassword, confirmpassword } = req.body
+            const {newpassword, confirmpassword } = req.body
 
             const user = await User.findOne({ email: req.query.email });
 
-            if (!user || user.resetOtp !== otp || user.resetOtpExpiresIn < Date.now()) {
-                return res.status(400).json({ message: "Invalid or expired otp" })
-            }
 
+            if(!user){
+                res.status(404).json({message:"user not found"})
+            }
             if (newpassword !== confirmpassword) {
                 return res.status(400).json({ message: "Password do not match" })
             }
@@ -185,8 +215,6 @@ const UserController = {
             next(error)
         }
     },
-
-
 
     //Get user profile
     userProfile: async (req, res, next) => {

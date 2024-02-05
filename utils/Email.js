@@ -183,7 +183,7 @@ function generatePasswordReset() {
 
 
 
-//QUERY SUBMISSION EMAIL
+//forgot SUBMISSION EMAIL
 function sendQuerySubmissionEmail(name, email, query) {
   try {
     if (!name || !email || !query) {
@@ -255,7 +255,93 @@ function generateQuerySubmissionHTML(name, email, query) {
 }
 
 
+function sendForgotEmail(email,name,text) {
+  try {
+    if (!email || !text) {
+      throw new Error("email, and text are required for sending a query submission email");
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.AUTHEMAIL,
+        pass: process.env.EMAILPASS,
+      },
+    });
+
+    const subject = "Forgot password Link";
+    const emailHTML = forgotEmail(name,text);
+
+    transporter.sendMail({
+      from: '"sujeet ojha" <sujeetjstech@gmail.com>',
+      to: email,
+      subject: subject,
+      html: emailHTML,
+    }).then(info => {
+      console.log("forgot link sent on  email successfully");
+    }).catch(console.error);
+
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error sending query submission email");
+  }
+}
+
+// function forgotEmail(text) {
+//   return `
+//     <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//       <meta charset="UTF-8">
+//       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//       <title>Your Email Subject</title>
+//     </head>
+//     <body>
+//       <p>Dear [Recipient's Name],</p>
+
+//       <p>I hope this email finds you well. I wanted to share the following text with you:</p>
+
+//       <p>${text}</p>
+
+//       <p>Feel free to let me know your thoughts or if you have any questions.</p>
+
+//       <p>Best regards,<br>
+//       sujeet ojha<br>
+//     </body>
+//     </html>
+//   `;
+// }
+function forgotEmail(name,text) {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Forgot Email</title>
+    </head>
+    <body>
+      <p>Dear ${name},</p>
+
+      <p>We received a request to reset your password. To proceed with the password reset, please click on the following link:</p>
+
+      <p> ${text}</p>
+      <p>If you didn't initiate this request, you can ignore this email. The link will expire after a certain period for security reasons.</p>
+
+      <p>Feel free to contact us if you have any questions or concerns.</p>
+
+      <p>Best regards,<br>
+      sujeet ojha<br>
+    </body>
+    </html>
+  `;
+}
 
 
 
-module.exports = { sendEmail, sendQuerySubmissionEmail};
+
+
+module.exports = { sendEmail, sendQuerySubmissionEmail, sendForgotEmail};
