@@ -2,15 +2,19 @@ const express=require('express')
 const router=express.Router()
 const userController=require('../controllers/auth.controller')
 const {registrationValidation,loginValidation,accountVerifyValidation,authTokenVerify}=require('../middleware/validateRoute')
+const {accountSettings}=require('../controllers/auth.controller')
+
+
 
 //Post
 router.post('/signup',[registrationValidation],userController.userRegister)
 router.post('/login',[loginValidation],userController.userLogin)
 router.post('/account-verify',[accountVerifyValidation],userController.verifyAccount)
-// router.post('/verify-otp',userController.resendVerification)
-// router.post('/logout',authTokenVerify,userController.userSignout)
 router.post('/forgot-password',userController.forgotPassword)
 router.post('/reset-password',userController.resetPassword)
+router.post('/account-settings',authTokenVerify,accountSettings)
+
+
 
 //Get
 router.get('/user-details',authTokenVerify,userController.userProfile)

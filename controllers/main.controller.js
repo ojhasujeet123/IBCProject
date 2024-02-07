@@ -96,9 +96,174 @@ const keyExtractor = (date) => `${date.getFullYear()}-${(date.getMonth() + 1)}-$
 
 
 
+
+// const getTransactionForChart = async (req, res, next) => {
+//     try {
+//         const transactions = await Transactions.aggregate([
+//             { $sort: { createdAt: -1 } },
+//             {
+//                 $group: {
+//                     _id: {
+//                         $dateToString: {
+//                             format: "%Y-%m-%d",
+//                             date: "$createdAt"
+//                         }
+//                     },
+//                     count: { $sum: 1 },
+//                     totalValue: {
+//                         $sum: {
+//                             $convert: {
+//                                 input: "$value",
+//                                 to: "long",
+//                                 onError: 0,
+//                                 onNull: 0
+//                             }
+//                         }
+//                     },
+//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
+//                     transactionCount: { $sum: 1 },
+//                     blockCount: { $sum: { $cond: [{ $eq: ["$reward", null] }, 0, 1] } },
+//                     totalReward:{
+//                         $sum:{
+//                             $cond:[
+//                                {$eq:["$value",null]},
+//                                0,
+//                                {
+//                                 $convert:{
+//                                     input:"$value",
+//                                     to:"long",
+//                                     onError:0,
+//                                     onNull:0
+//                                 }
+//                                }
+//                             ]
+//                         }
+//                     }
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     chartLabels: "$_id",
+//                     chartValues: "$count",
+//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
+//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
+//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
+//                     blocksAndRewardsChartValues:"$blockCount",
+//                     totalReward:"$totalReward"
+//                 }
+//             },
+//             { $sort: { chartLabels: -1 } }
+//         ]);
+
+//         const chart = {
+//             chartLabels: transactions.map(entry => entry.chartLabels),
+//             chartValues: transactions.map(entry => entry.chartValues),
+//             priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
+//             dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
+//             avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+//             blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
+//             totalReward: transactions.map(entry => entry.totalReward)
+//         };
+
+//         res.status(200).json({ chart });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
+// const getTransactionForChart = async (req, res, next) => {
+//     try {
+//         const transactions = await Transactions.aggregate([
+//             { $sort: { createdAt: -1 } },
+//             {
+//                 $group: {
+//                     _id: {
+//                         $dateToString: {
+//                             format: "%Y-%m-%d",
+//                             date: "$createdAt"
+//                         }
+//                     },
+//                     count: { $sum: 1 },
+//                     totalValue: {
+//                         $sum: {
+//                             $convert: {
+//                                 input: "$value",
+//                                 to: "long",
+//                                 onError: 0,
+//                                 onNull: 0
+//                             }
+//                         }
+//                     },
+//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
+//                     transactionCount: { $sum: 1 },
+//                     totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
+//                     blockCount: { $sum: { $cond: [{ $eq: ["$reward", null] }, 0, 1] } },
+//                     totalReward: {
+//                         $sum: {
+//                             $ifNull: [
+//                                 {
+//                                     $convert: {
+//                                         input: "$value",
+//                                         to: "long",
+//                                         onError: 0,
+//                                         onNull: 0
+//                                     }
+//                                 },
+//                                 0
+//                             ]
+//                         }
+//                     }
+                    
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     chartLabels: "$_id",
+//                     chartValues: "$count",
+//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
+//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
+//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
+//                     blocksAndRewardsChartValues:"$blockCount",
+//                     totalReward:"$totalReward",
+//                     transactionFee:{$divide:["$totalCummulativeGasUsed",83]}
+//                 }
+//             },
+//             { $sort: { chartLabels: -1 } }
+//         ]);
+
+//         const chart = {
+//             chartLabels: transactions.map(entry => entry.chartLabels),
+//             chartValues: transactions.map(entry => entry.chartValues),
+//             priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
+//             dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
+//             avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+//             blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
+//             totalReward: transactions.map(entry => entry.totalReward),
+//             transactionFee:transactions.map(entry=>entry.transactionFee)
+
+//         };
+
+//         res.status(200).json(chart);  // Return the chart object directly
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
 const getTransactionForChart = async (req, res, next) => {
     try {
+        let dateFilter = {}
+        const timeRange=req.query.timerange
+        if(timeRange){
+            const startDate=new Date()
+            startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
+            
+            //Add the filter to aggregate pipeline
+            dateFilter={$match:{createdAt:{$gte:startDate}}};
+        }
         const transactions = await Transactions.aggregate([
+            dateFilter,
             { $sort: { createdAt: -1 } },
             {
                 $group: {
@@ -121,6 +286,24 @@ const getTransactionForChart = async (req, res, next) => {
                     },
                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
                     transactionCount: { $sum: 1 },
+                    totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
+                    blockCount: { $sum: { $cond: [{ $eq: ["$reward", null] }, 0, 1] } },
+                    totalReward: {
+                        $sum: {
+                            $ifNull: [
+                                {
+                                    $convert: {
+                                        input: "$value",
+                                        to: "long",
+                                        onError: 0,
+                                        onNull: 0
+                                    }
+                                },
+                                0
+                            ]
+                        }
+                    }
+                    
                 }
             },
             {
@@ -129,7 +312,10 @@ const getTransactionForChart = async (req, res, next) => {
                     chartValues: "$count",
                     priceChartDataValues: { $divide: ["$totalValue", 83] },
                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
-                    avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] }
+                    avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
+                    blocksAndRewardsChartValues:"$blockCount",
+                    totalReward:"$totalReward",
+                    transactionFee:{$divide:["$totalCummulativeGasUsed",83]}
                 }
             },
             { $sort: { chartLabels: -1 } }
@@ -141,9 +327,13 @@ const getTransactionForChart = async (req, res, next) => {
             priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
             dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
             avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+            blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
+            totalReward: transactions.map(entry => entry.totalReward),
+            transactionFee:transactions.map(entry=>entry.transactionFee)
+
         };
 
-        res.status(200).json({ chart });
+        res.status(200).json(chart);  // Return the chart object directly
     } catch (error) {
         console.error(error);
         next(error);
@@ -152,14 +342,14 @@ const getTransactionForChart = async (req, res, next) => {
 
 
 
-
-
 const accounts = async (req, res, next) => {
     try {
         let page = req.query.page || 1;
-        let limit = req.query.limit || 10;
+        let limit = parseInt(req.query.limit, 10) || 10;
+        let sortOrder = req.query.order === 'asc' ? 1 : -1
 
-        // Use aggregation to calculate total transactions
+
+
         const totalTxnAggregate = await Transactions.aggregate([
             { $group: { _id: null, count: { $sum: 1 } } }
         ]);
@@ -168,7 +358,7 @@ const accounts = async (req, res, next) => {
 
         const holdersAggregate = await Holders.aggregate([
             {
-                $sort: { "balance": -1 }
+                $sort: { "balance": sortOrder }
             },
             {
                 $skip: parseInt((page - 1) * limit)
@@ -223,45 +413,7 @@ const accounts = async (req, res, next) => {
 //BLOCKS
 
 
-// const blocks = async (req, res, next) => {
-//     try {
-//         let { page = 1, limit = 10 } = req.query;
-//         page = parseInt(page);
-//         limit = parseInt(limit);
 
-//         let countBlocks = await Transactions.distinct('blockNumber');
-//         let uniqueBlockNumbers = new Set();
-//         let blocksWithTransactions = [];
-//         let skipCount = 0;
-
-//         while (blocksWithTransactions.length < limit && skipCount < countBlocks.length) {
-//             const blocksData = await Transactions.find({})
-//                 .sort({ updatedAt: -1 })
-//                 .select('blockNumber createdAt updatedAt value')
-//                 .limit(limit - blocksWithTransactions.length)
-//                 .skip(parseInt((page - 1) * limit) + skipCount);
-
-//             for (const block of blocksData) {
-//                 if (!uniqueBlockNumbers.has(block.blockNumber)) {
-//                     uniqueBlockNumbers.add(block.blockNumber);
-
-//                     const blocksData = await Transactions.find({ blockNumber: block.blockNumber });
-//                     const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
-//                     let blocksDataCount = blocksData.length;
-//                     const elapsedTime = getElapsedTime(block.createdAt)
-//                     blocksWithTransactions.push({ ...block.toObject(), elapsedTime, totalValue, blocksDataCount });
-//                 }
-//             }
-
-//             skipCount += limit;
-//         }
-
-//         res.status(200).json({ countBlocks: countBlocks.length, blocks: blocksWithTransactions });
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
 
 const blocks = async (req, res, next) => {
     try {
@@ -284,11 +436,12 @@ const blocks = async (req, res, next) => {
                 if (!uniqueBlockNumbers.has(block.blockNumber)) {
                     uniqueBlockNumbers.add(block.blockNumber);
 
-                    const blocksData = await Transactions.find({ blockNumber: block.blockNumber }, 'createdAt value')
+                    const blocksData = await Transactions.find({ blockNumber: block.blockNumber }, 'createdAt value gasUsed')
                     const totalValue = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.value), 0);
+                    const totalGasUsed = blocksData.reduce((acc, transaction) => acc + parseFloat(transaction.gasUsed), 0);
                     let blocksDataCount = blocksData.length;
                     const elapsedTime = getElapsedTime(block.createdAt)
-                    blocksWithTransactions.push({ ...block.toObject(), elapsedTime, totalValue, blocksDataCount });
+                    blocksWithTransactions.push({ ...block.toObject(), elapsedTime, totalGasUsed, totalValue, blocksDataCount });
                 }
             }
 

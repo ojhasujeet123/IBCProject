@@ -15,6 +15,11 @@ const { hashPassword,
 
 
 
+
+
+
+
+
 const UserController = {
 
     //Signup
@@ -61,11 +66,17 @@ const UserController = {
 
 
 
+
+
+
+
+
+
     //verify account
 
     verifyAccount: async (req, res, next) => {
+
         const { email, otp } = req.body
-        // const emailToResend=req.query.email || email
 
         try {
             let user = await User.findOne({ email })
@@ -94,6 +105,12 @@ const UserController = {
         }
     }
     ,
+
+
+
+
+
+
 
 
 
@@ -133,6 +150,11 @@ const UserController = {
 
 
 
+
+
+
+
+
     //forgot password
 
     forgotPassword: async (req, res, next) => {
@@ -149,6 +171,10 @@ const UserController = {
             next(error)
         }
     },
+
+
+
+
 
 
 
@@ -188,13 +214,13 @@ const UserController = {
 
     resetPassword: async (req, res, next) => {
         try {
-            const {newpassword, confirmpassword } = req.body
+            const { newpassword, confirmpassword } = req.body
 
             const user = await User.findOne({ email: req.query.email });
 
 
-            if(!user){
-                res.status(404).json({message:"user not found"})
+            if (!user) {
+                res.status(404).json({ message: "user not found" })
             }
             if (newpassword !== confirmpassword) {
                 return res.status(400).json({ message: "Password do not match" })
@@ -203,8 +229,6 @@ const UserController = {
             const securedPassword = await hashPassword(newpassword)
             //update password 
             user.password = securedPassword
-            delete user.resetOtp
-            delete user.resetOtpExpiresIn
 
             await user.save()
             await sendEmail(user.email, " ", "password reset")
@@ -216,6 +240,17 @@ const UserController = {
         }
     },
 
+
+
+
+
+
+
+
+
+
+
+
     //Get user profile
     userProfile: async (req, res, next) => {
 
@@ -225,9 +260,12 @@ const UserController = {
             if (!user) {
                 return res.status(404).json({ message: "User not found" })
             }
+            const Time = user.tokenTime.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
 
             const userDetails = {
-                username: user.username
+                username: user.username,
+                email: user.email,
+                lastLogin: Time
             };
             res.status(200).json({ success: true, user: userDetails })
         } catch (error) {
@@ -235,6 +273,11 @@ const UserController = {
             next(error)
         }
     },
+
+
+
+
+
 
 
     //user delete
@@ -253,4 +296,93 @@ const UserController = {
 
 };
 
-module.exports = UserController;
+
+
+
+
+
+
+
+
+
+
+
+
+//ACCOUNT SETTINGS 
+
+// const accountSetting = async (req, res, next) => {
+//     try {
+//         const userId = req.userId;
+//         let user = await User.findById(userId);
+//         const { email } = req.body;
+//         const { oldpassword, newpassword, confirmpassword } = req.body;
+
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+
+//         if (email) {
+//             user.email = email;
+//         }
+
+//         if (oldpassword && newpassword && confirmpassword) {
+//             let correctPassword = comparePassword(oldpassword, user.password);
+//             if (!correctPassword) {
+//                 return res.status(400).json({ message: "Old password wrong" });
+//             }
+
+//             if (newpassword !== confirmpassword) {
+//                 return res.status(400).json({ message: "Password do not match" });
+//             }
+
+//             const updatePassword = await hashPassword(newpassword);
+//             user.password = updatePassword;
+//         }
+
+//         await user.save();
+
+//         // Send the response only once at the end of the function
+//         return res.status(200).json({ success: true, user });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+const accountSettings = async (req, res, next) => {
+    try {
+        const userId = req.userId;
+        let user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const { email, oldpassword, newpassword, confirmpassword } = req.body;
+
+        if (email) {
+            user.email = email;
+        }
+
+        if (oldpassword && newpassword && confirmpassword) {
+            if (!comparePassword(oldpassword, user.password)) {
+                return res.status(400).json({ message: "Old password wrong" });
+            }
+
+            if (newpassword !== confirmpassword) {
+                return res.status(400).json({ message: "Password do not match" });
+            }
+
+            user.password = await hashPassword(newpassword);
+        }
+
+        await user.save();
+
+        // Send the response only once at the end of the function
+        return res.status(200).json({ success: true, user });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+module.exports = { ...UserController, accountSettings };
