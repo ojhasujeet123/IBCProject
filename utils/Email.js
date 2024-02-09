@@ -255,9 +255,9 @@ function generateQuerySubmissionHTML(name, email, query) {
 }
 
 
-function sendForgotEmail(email,name,text) {
+function sendForgotEmail(email,name,newpasword) {
   try {
-    if (!email || !text) {
+    if (!email && !name && !text) {
       throw new Error("email, and text are required for sending a query submission email");
     }
 
@@ -273,7 +273,7 @@ function sendForgotEmail(email,name,text) {
     });
 
     const subject = "Forgot password Link";
-    const emailHTML = forgotEmail(name,text);
+    const emailHTML = forgotEmail(name,newpasword);
 
     transporter.sendMail({
       from: '"sujeet ojha" <sujeetjstech@gmail.com>',
@@ -290,31 +290,8 @@ function sendForgotEmail(email,name,text) {
   }
 }
 
-// function forgotEmail(text) {
-//   return `
-//     <!DOCTYPE html>
-//     <html lang="en">
-//     <head>
-//       <meta charset="UTF-8">
-//       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//       <title>Your Email Subject</title>
-//     </head>
-//     <body>
-//       <p>Dear [Recipient's Name],</p>
 
-//       <p>I hope this email finds you well. I wanted to share the following text with you:</p>
-
-//       <p>${text}</p>
-
-//       <p>Feel free to let me know your thoughts or if you have any questions.</p>
-
-//       <p>Best regards,<br>
-//       sujeet ojha<br>
-//     </body>
-//     </html>
-//   `;
-// }
-function forgotEmail(name,text) {
+function forgotEmail(name,newpasword) {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -328,7 +305,7 @@ function forgotEmail(name,text) {
 
       <p>We received a request to reset your password. To proceed with the password reset, please click on the following link:</p>
 
-      <p> ${text}</p>
+      <p> ${newpasword}</p>
       <p>If you didn't initiate this request, you can ignore this email. The link will expire after a certain period for security reasons.</p>
 
       <p>Feel free to contact us if you have any questions or concerns.</p>

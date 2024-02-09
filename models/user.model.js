@@ -34,13 +34,23 @@ const userSchema = new mongoose.Schema({
   resetOtpExpiresIn:{
     type:Date
   },
-  tokenTime: {
+  tokenTimes: {
     type: Date,
     default: Date.now,
     required: true
   },
+  tokenTimes:[
+    {
+      type:Date,
+      default:Date.now
+    }
+  ]
+
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
+
+
+

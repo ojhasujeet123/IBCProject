@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const User = require('../models/user.model');
 const { sendEmail,sendForgotEmail } = require('./Email');
-
+const crypto=require('crypto')
 
 
 
@@ -30,14 +30,14 @@ async function comparePassword(enteredPassword, hashedPassword) {
 
 //Generate verify Token
 function generateRandomString(length) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const characters = "!@$-%&:,~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     let randomString = '';
 
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length);
         randomString += characters.charAt(randomIndex);
     }
-
+    console.log(randomString);
     return randomString;
 
 }
@@ -63,7 +63,7 @@ function generateOTP() {
 
 async function userVerified(res, user) {
     try {
-        const tokenTime = user.tokenTime || 0;
+        const tokenTime = user.createdAt|| 0;
         const tokenExpiration = process.env.VERIFICATIONTIMEOUT
 
         if (Date.now() - tokenTime <= tokenExpiration) {
@@ -83,25 +83,16 @@ async function userVerified(res, user) {
 
 //Forgot password Handle
 
-// async function forgotHandle(res, user, email) {
-//     const otp = generateOTP()
-//     user.resetOtp = otp;
-//     user.resetOtpExpiresIn = Date.now() + parseInt(process.env.RESETOTPEXPIRESIN)
-//     await user.save();
-//     await sendEmail(email, otp, "forgot-password");
-//     res.status(200).json({ message: "otp sent successfully", user })
-
-// }
-
 async function forgotHandle(res, user, email) {
-    // const otp = generateOTP()
-    // user.resetOtp = otp;
-    // user.resetOtpExpiresIn = Date.now() + parseInt(process.env.RESETOTPEXPIRESIN)
-    // await user.save();
-    await sendForgotEmail(email,user.username,`http://192.168.1.73:3000/ResetPassword`);
+    let newpassword=generateRandomString(8);
+    user.password=await hashPassword(newpassword)
+    user.save()
+    await sendForgotEmail(email,user.username,newpassword);
     res.status(200).json({ message: "Link sent successfully", user })
-
 }
+
+
+
 
 
 async function deleteUnverifiedUser(user) {
@@ -142,7 +133,7 @@ const getElapsedTime = (timestamp) => {
 module.exports = {
     hashPassword,
     comparePassword,
-    generateRandomString,
+    // generateRandomString,
     userVerified,
     generateOTP,
     forgotHandle,

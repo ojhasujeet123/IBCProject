@@ -14,7 +14,7 @@ const handleValidationErrors=(req,res,next)=>{
 // Rigtration validation middleware
 const registrationValidation=[
     check('email').isEmail().withMessage('Invalid email address'),
-    check('username').isLength({min:3, max:30}).isAlphanumeric(),
+    check('username').isLength({min:3, max:24}).isAlphanumeric(),
     check('password').isLength({min:6,max:24}),
     check('confirmPassword').custom((value,{req})=>{
         if(value !== req.body.password){

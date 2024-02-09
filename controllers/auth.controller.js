@@ -116,38 +116,52 @@ const UserController = {
 
 
     //Signin
+
     userLogin: async (req, res, next) => {
-
         try {
-            const { email, password } = req.body;
-            const user = await User.findOne({ email });
-
-            if (!user) {
-                return res.status(400).json({ message: "User not found" })
-            }
-
-            const isPasswordValid = await comparePassword(password, user.password);
-
-            if (!isPasswordValid) {
-                return res.status(401).json({ message: "Invalid email or password" });
-            }
-
-            const token = jwt.sign({ userId: user._id }, jwtsecret, { expiresIn: '2h' })
-
-            res.status(200).json({
-                success: true,
-                token,
-                user,
-                message: 'User Logged in Successfully'
-            });
+          const { email, password } = req.body;
+          const user = await User.findOne({ email });
+      
+          if (!user) {
+            return res.status(400).json({ message: 'User not found' });
+          }
+      
+          const isPasswordValid = await comparePassword(password, user.password);
+      
+          if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+          }
+      
+          // Initialize tokenTimes if not present
+          if (!user.tokenTimes) {
+            user.tokenTimes = [];
+          }
+      
+          // Update tokenTimes and limit to the latest 5 entries
+          user.tokenTimes.unshift(Date.now());
+          user.tokenTimes = user.tokenTimes.slice(0, 5);
+      
+          await user.save();
+      
+          const token = jwt.sign({ userId: user._id }, jwtsecret);
+      
+          res.status(200).json({
+            success: true,
+            token,
+            user,
+            message: 'User Logged in Successfully',
+          });
         } catch (error) {
-            console.error(error);
-            next(error);
+          console.error(error);
+          next(error);
         }
-    },
-
-
-
+      },
+      
+      
+      
+      
+      
+      
 
 
 
@@ -164,7 +178,7 @@ const UserController = {
             if (!user) {
                 return res.status(404).json({ message: "User not found" })
             }
-            //Handle forgot otp
+            //Handle forgot With reset
             forgotHandle(res, user, email);
         } catch (error) {
             console.error(error);
@@ -172,8 +186,7 @@ const UserController = {
         }
     },
 
-
-
+ 
 
 
 
@@ -182,36 +195,6 @@ const UserController = {
 
 
     //reset password
-    // resetPassword: async (req, res, next) => {
-    //     try {
-    //         const { otp, newpassword, confirmpassword } = req.body
-
-    //         const user = await User.findOne({ email: req.query.email });
-
-    //         if (!user || user.resetOtp !== otp || user.resetOtpExpiresIn < Date.now()) {
-    //             return res.status(400).json({ message: "Invalid or expired otp" })
-    //         }
-
-    //         if (newpassword !== confirmpassword) {
-    //             return res.status(400).json({ message: "Password do not match" })
-    //         }
-    //         // console.log(newpassword);
-    //         const securedPassword = await hashPassword(newpassword)
-    //         //update password 
-    //         user.password = securedPassword
-    //         delete user.resetOtp
-    //         delete user.resetOtpExpiresIn
-
-    //         await user.save()
-    //         await sendEmail(user.email, " ", "password reset")
-
-    //         res.status(200).json({ message: "Password updated successfully" })
-    //     } catch (error) {
-    //         console.error(error);
-    //         next(error)
-    //     }
-    // },
-
     resetPassword: async (req, res, next) => {
         try {
             const { newpassword, confirmpassword } = req.body
@@ -240,8 +223,11 @@ const UserController = {
         }
     },
 
+  
+      
 
-
+    
+    
 
 
 
@@ -260,7 +246,7 @@ const UserController = {
             if (!user) {
                 return res.status(404).json({ message: "User not found" })
             }
-            const Time = user.tokenTime.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+            const Time = user.tokenTimes.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
 
             const userDetails = {
                 username: user.username,
@@ -310,7 +296,7 @@ const UserController = {
 
 //ACCOUNT SETTINGS 
 
-// const accountSetting = async (req, res, next) => {
+// const accountSettings = async (req, res, next) => {
 //     try {
 //         const userId = req.userId;
 //         let user = await User.findById(userId);
@@ -348,23 +334,31 @@ const UserController = {
 //         next(error);
 //     }
 // };
+
+
 const accountSettings = async (req, res, next) => {
     try {
         const userId = req.userId;
         let user = await User.findById(userId);
+        const { email, oldpassword, newpassword, confirmpassword } = req.body;
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        const { email, oldpassword, newpassword, confirmpassword } = req.body;
-
-        if (email) {
-            user.email = email;
+        if(email && oldpassword){
+            const correctPassword = await comparePassword(oldpassword, user.password);
+            if (!correctPassword) {
+                return res.status(400).json({ message: "Old password wrong" });
+            }else{
+                user.email=email
+            }
         }
 
         if (oldpassword && newpassword && confirmpassword) {
-            if (!comparePassword(oldpassword, user.password)) {
+            console.log(user.password);
+            const correctPassword = await comparePassword(oldpassword, user.password);
+            console.log(correctPassword);
+            if (!correctPassword) {
                 return res.status(400).json({ message: "Old password wrong" });
             }
 
@@ -372,10 +366,14 @@ const accountSettings = async (req, res, next) => {
                 return res.status(400).json({ message: "Password do not match" });
             }
 
-            user.password = await hashPassword(newpassword);
+            const updatePassword = await hashPassword(newpassword);
+            user.password = updatePassword;
         }
 
-        await user.save();
+        // Save the user only if there are changes
+        if (user.isModified()) {
+            await user.save();
+        }
 
         // Send the response only once at the end of the function
         return res.status(200).json({ success: true, user });
