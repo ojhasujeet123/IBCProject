@@ -70,7 +70,7 @@ getAllTransactions: async (req, res, next) => {
 
 
 
-
+//Transaction By hash
 
     getTransactionByHash: async (req, res, next) => {
         try {
@@ -96,21 +96,54 @@ getAllTransactions: async (req, res, next) => {
 
     //GET TRANSACTION BY ADDRESS
 
+   
+    // getTransactionByAddress: async (req, res, next) => {
+    //     try {
+    //         const { page = 1, limit = 10 } = req.query;
+    //         const skip = (page - 1) * limit;
+    //         const transactionByAddress = await Transactions.find({
+    //             $or: [{ from: req.params.address }, { to: req.params.address }]
+    //         }).skip(skip).limit(limit);
+
+    //         if (!transactionByAddress || transactionByAddress.length === 0) {
+    //             return res.status(404).json({ message: "Transactions not found for this address" });
+    //         }
+    //         res.status(200).json({ transactionByAddress });
+    //     } catch (error) {
+    //         console.error(error);
+    //         next(error);
+    //     }
+    // },   
     getTransactionByAddress: async (req, res, next) => {
         try {
-            const transactionByAddress = await Transactions.find({
+            const { page = 1, limit = 10 } = req.query;
+            const skip = (page - 1) * limit;
+            const transactions = await Transactions.find({
                 $or: [{ from: req.params.address }, { to: req.params.address }]
-            });
-
-            if (!transactionByAddress || transactionByAddress.length === 0) {
+            }).sort({createdAt:-1}).skip(skip).limit(limit);
+    
+            if (!transactions || transactions.length === 0) {
                 return res.status(404).json({ message: "Transactions not found for this address" });
             }
-            res.status(200).json({ transactionByAddress });
+            
+            const formattedTransactions = transactions.map(transaction => {
+                // Assuming createdAt field is a Date object, you can format it using toLocaleString or any other formatting method
+                return {
+                    ...transaction._doc,
+                    createdAt: getElapsedTime(transaction.createdAt) // Assuming formatDate is your formatting function
+                };
+            });
+    
+            res.status(200).json({ transactionByAddress: formattedTransactions });
         } catch (error) {
             console.error(error);
             next(error);
         }
-    },   
+    },  
+    
+    // Example formatting function
+
+    
 };
 
 

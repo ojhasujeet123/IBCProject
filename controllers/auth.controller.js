@@ -238,30 +238,31 @@ const UserController = {
 
 
     //Get user profile
+
+
     userProfile: async (req, res, next) => {
-
         try {
-            const userId = req.userId
-            const user = await User.findById(userId)
+            const userId = req.userId;
+            const user = await User.findById(userId);
             if (!user) {
-                return res.status(404).json({ message: "User not found" })
+                return res.status(404).json({ message: "User not found" });
             }
-            const Time = user.tokenTimes.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-
+            
+            // Convert login times to array format
+            const loginTimes = user.tokenTimes.map(time => time.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    
             const userDetails = {
                 username: user.username,
                 email: user.email,
-                lastLogin: Time
+                lastLogin: loginTimes
             };
-            res.status(200).json({ success: true, user: userDetails })
+            res.status(200).json({ success: true, user: userDetails });
         } catch (error) {
             console.error(error);
-            next(error)
+            next(error);
         }
     },
-
-
-
+    
 
 
 
