@@ -118,10 +118,17 @@ getAllTransactions: async (req, res, next) => {
         try {
             const { page = 1, limit = 10 } = req.query;
             const skip = (page - 1) * limit;
-            const transactions = await Transactions.find({
-                $or: [{ from: req.params.address }, { to: req.params.address }]
-            }).sort({createdAt:-1}).skip(skip).limit(limit);
-    
+            // const transactions = await Transactions.find({
+            //     $or: [{ from: req.params.address }, { to: req.params.address }]
+            // }).sort({createdAt:-1}).skip(skip).limit(limit);
+            
+            const [txnCount,transactions]=await Promise.all([
+                await Transactions.find({$or: [{ from: req.params.address }, { to: req.params.address }]}).countDocuments(),
+                await Transactions.find({
+                        $or: [{ from: req.params.address }, { to: req.params.address }]
+                    }).sort({createdAt:-1})
+            ])
+
             if (!transactions || transactions.length === 0) {
                 return res.status(404).json({ message: "Transactions not found for this address" });
             }
@@ -134,7 +141,7 @@ getAllTransactions: async (req, res, next) => {
                 };
             });
     
-            res.status(200).json({ transactionByAddress: formattedTransactions });
+            res.status(200).json({ txnCount,transactionByAddress: formattedTransactions });
         } catch (error) {
             console.error(error);
             next(error);

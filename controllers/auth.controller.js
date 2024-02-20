@@ -297,57 +297,20 @@ const UserController = {
 
 //ACCOUNT SETTINGS 
 
-// const accountSettings = async (req, res, next) => {
-//     try {
-//         const userId = req.userId;
-//         let user = await User.findById(userId);
-//         const { email } = req.body;
-//         const { oldpassword, newpassword, confirmpassword } = req.body;
-
-//         if (!user) {
-//             return res.status(404).json({ message: "User not found" });
-//         }
-
-//         if (email) {
-//             user.email = email;
-//         }
-
-//         if (oldpassword && newpassword && confirmpassword) {
-//             let correctPassword = comparePassword(oldpassword, user.password);
-//             if (!correctPassword) {
-//                 return res.status(400).json({ message: "Old password wrong" });
-//             }
-
-//             if (newpassword !== confirmpassword) {
-//                 return res.status(400).json({ message: "Password do not match" });
-//             }
-
-//             const updatePassword = await hashPassword(newpassword);
-//             user.password = updatePassword;
-//         }
-
-//         await user.save();
-
-//         // Send the response only once at the end of the function
-//         return res.status(200).json({ success: true, user });
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
 
 
 const accountSettings = async (req, res, next) => {
     try {
         const userId = req.userId;
-        let user = await User.findById(userId);
-        const { email, oldpassword, newpassword, confirmpassword } = req.body;
-
+        let user = await User.findById(userId); 
+        const { email, oldPassword, newPassword, confirmPassword } = req.body;
+        console.log("req.body",req.body);
+        console.log("Mypassword",oldPassword,newPassword, confirmPassword);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        if(email && oldpassword){
-            const correctPassword = await comparePassword(oldpassword, user.password);
+        if(email && oldPassword){
+            const correctPassword = await comparePassword(oldPassword, user.password);
             if (!correctPassword) {
                 return res.status(400).json({ message: "Old password wrong" });
             }else{
@@ -355,26 +318,27 @@ const accountSettings = async (req, res, next) => {
             }
         }
 
-        if (oldpassword && newpassword && confirmpassword) {
+        if (oldPassword && newPassword && confirmPassword) {
             console.log(user.password);
-            const correctPassword = await comparePassword(oldpassword, user.password);
+            const correctPassword = await comparePassword(oldPassword, user.password);
             console.log(correctPassword);
             if (!correctPassword) {
                 return res.status(400).json({ message: "Old password wrong" });
             }
 
-            if (newpassword !== confirmpassword) {
+            if (newPassword !== confirmPassword) {
                 return res.status(400).json({ message: "Password do not match" });
             }
 
-            const updatePassword = await hashPassword(newpassword);
+            const updatePassword = await hashPassword(newPassword);
+            console.log("updatePassword",updatePassword);
             user.password = updatePassword;
         }
 
         // Save the user only if there are changes
-        if (user.isModified()) {
+
             await user.save();
-        }
+       
 
         // Send the response only once at the end of the function
         return res.status(200).json({ success: true, user });

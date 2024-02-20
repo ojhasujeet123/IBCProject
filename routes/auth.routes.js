@@ -9,7 +9,7 @@ const {accountSettings}=require('../controllers/auth.controller')
 //Post
 router.post('/signup',[registrationValidation],userController.userRegister)
 router.post('/login',[loginValidation],userController.userLogin)
-router.post('/account-verify',[accountVerifyValidation],userController.verifyAccount)
+router.post('/account-verify',userController.verifyAccount)
 router.post('/forgot-password',userController.forgotPassword)
 router.post('/reset-password',userController.resetPassword)
 router.post('/account-settings',authTokenVerify,accountSettings)
