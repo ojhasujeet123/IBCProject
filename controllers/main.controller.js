@@ -4,20 +4,14 @@ const ContactQuery = require('../models/query.model')
 const Holders = require('../models/holder.model')
 const { sendQuerySubmissionEmail } = require('../utils/Email')
 const { getElapsedTime } = require('../utils/auth.utils')
-// require('dotenv').config();
-// const { Web3 } = require('web3')
-const { set } = require('mongoose')
-// const web3 = new Web3(process.env.ETHEREUMNODEURL)
-
 require('dotenv').config();
-const { Web3 } = require('web3');
+const { Web3 } = require('web3')
+const { set } = require('mongoose')
+const web3 = new Web3(process.env.ETHEREUMNODEURL)
 
-const web3 = new Web3(process.env.ETHEREUMNODEURL);
 
-// Test connection
-web3.eth.net.isListening()
-    .then(() => console.log('Connected to Ethereum node'))
-    .catch(err => console.error('Error connecting to Ethereum node:', err));
+
+
 
 
 //TOKEN TRANSACTION
@@ -44,6 +38,19 @@ const tokenTransaction = async (req, res, next) => {
         next(error)
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -107,14 +114,107 @@ const keyExtractor = (date) => `${date.getFullYear()}-${(date.getMonth() + 1)}-$
 // };
 
 
-//Coorect code 
+//Correct code 
+
+// const getTransactionForChart = async (req, res, next) => {
+//     try {
+//         let dateFilter = []
+//         const timeRange = req.query.timerange
+//         if (timeRange && timeRange !== "all") {
+//             const startDate = new Date()
+//             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
+
+//             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
+//         }
+//         const transactions = await Transactions.aggregate([
+//             ...dateFilter,
+//             { $sort: { createdAt: -1 } },
+//             {
+//                 $group: {
+//                     _id: {
+//                         $dateToString: {
+//                             format: "%Y-%m-%d",
+//                             date: "$createdAt"
+//                         }
+//                     },
+//                     count: { $sum: 1 },
+//                     totalValue: {
+//                         $sum: {
+//                             $convert: {
+//                                 input: "$value",
+//                                 to: "long",
+//                                 onError: 0,
+//                                 onNull: 0
+//                             }
+//                         }
+//                     },
+//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
+//                     transactionCount: { $sum: 1 },
+//                     totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
+//                     blockCount: { $sum: { $cond: [{ $eq: ["$value", null] }, 0, 1] } },
+//                     totalReward: {
+//                         $sum: {
+//                             $ifNull: [
+//                                 {
+//                                     $convert: {
+//                                         input: "$value",
+//                                         to: "long",
+//                                         onError: 0,
+//                                         onNull: 0
+//                                     }
+//                                 },
+//                                 0
+//                             ]
+//                         }
+//                     }
+
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     chartLabels: "$_id",
+//                     chartValues: "$count",
+//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
+//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
+//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
+//                     blocksAndRewardsChartValues: "$blockCount",
+//                     totalReward: "$totalReward",
+//                     transactionFee: { $divide: ["$totalCummulativeGasUsed", 83] }
+//                 }
+//             },
+//             { $sort: { chartLabels: -1 } }
+//         ]);
+
+//         const chart = {
+//             chartLabels: transactions.map(entry => entry.chartLabels),
+//             chartValues: transactions.map(entry => entry.chartValues),
+//             priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
+//             dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
+//             avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+//             blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
+//             totalReward: transactions.map(entry => entry.totalReward),
+//             transactionFee: transactions.map(entry => entry.transactionFee)
+
+//         };
+
+//         res.status(200).json(chart);
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
+
+
+
+//only month gap 
 
 const getTransactionForChart = async (req, res, next) => {
     try {
-        let dateFilter = []
-        const timeRange = req.query.timerange
+        let dateFilter = [];
+        const timeRange = req.query.timerange;
         if (timeRange && timeRange !== "all") {
-            const startDate = new Date()
+            const startDate = new Date();
             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
 
             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
@@ -178,16 +278,38 @@ const getTransactionForChart = async (req, res, next) => {
             { $sort: { chartLabels: -1 } }
         ]);
 
-        const chart = {
-            chartLabels: transactions.map(entry => entry.chartLabels),
-            chartValues: transactions.map(entry => entry.chartValues),
-            priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
-            dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
-            avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
-            blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
-            totalReward: transactions.map(entry => entry.totalReward),
-            transactionFee: transactions.map(entry => entry.transactionFee)
+        // Modify chartLabels to include gaps
+        const chartLabels = transactions.map(entry => entry.chartLabels);
+        const chartValues = transactions.map(entry => entry.chartValues);
+        const priceChartDataValues = transactions.map(entry => entry.priceChartDataValues);
+        const dailyGasPriceValues = transactions.map(entry => entry.dailyGasPriceValues);
+        const avgGasPriceValues = transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues);
+        const blockCount = transactions.map(entry => entry.blocksAndRewardsChartValues);
+        const totalReward = transactions.map(entry => entry.totalReward);
+        const transactionFee = transactions.map(entry => entry.transactionFee);
 
+        // Insert gaps in chartLabels
+        const labeledIndices = [0];
+        for (let i = 1; i < chartLabels.length; i++) {
+            const currentDate = new Date(chartLabels[i]);
+            const prevDate = new Date(chartLabels[i - 1]);
+            if (currentDate.getMonth() !== prevDate.getMonth() || currentDate.getFullYear() !== prevDate.getFullYear()) {
+                labeledIndices.push(i);
+            }
+        }
+
+
+        const labeledChartLabels = chartLabels.map((label, index) => labeledIndices.includes(index) ? label : '');
+        
+        const chart = {
+            chartLabels: labeledChartLabels,
+            chartValues,
+            priceChartDataValues,
+            dailyGasPriceValues,
+            avgGasPriceValues,
+            blockCount,
+            totalReward,
+            transactionFee
         };
 
         res.status(200).json(chart);
@@ -199,7 +321,16 @@ const getTransactionForChart = async (req, res, next) => {
 
 
 
-//AVG BLOCK SIZE
+
+
+
+
+
+
+
+
+
+//AVG BLOCK
 const avgBlockSize = async (req, res, next) => {
     const { month, year } = req.query;
 
@@ -261,6 +392,7 @@ const avgBlockSize = async (req, res, next) => {
         next(error);
     }
 };
+
 
 
 
@@ -347,6 +479,16 @@ const accounts = async (req, res, next) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
 //BLOCKS
 
 
@@ -390,6 +532,16 @@ const blocks = async (req, res, next) => {
         next(error);
     }
 };
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -447,6 +599,17 @@ const getBlockDetails = async (req, res, next) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 //CONTACT US
 
 const contactquery = async (req, res, next) => {
@@ -473,6 +636,13 @@ const contactquery = async (req, res, next) => {
         next(error)
     }
 }
+
+
+
+
+
+
+
 
 module.exports = {
     tokenTransaction,
