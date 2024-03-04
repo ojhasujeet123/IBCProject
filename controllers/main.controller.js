@@ -51,170 +51,14 @@ const tokenTransaction = async (req, res, next) => {
 
 
 
-
-
-
-
-
-
-// const calculateChartData = (transactions, keyExtractor, transformation) => {
-//     const chartData = {};
-//     transactions.forEach(({ timeStamp, value }) => {
-//         const date = new Date(timeStamp * 1000);
-//         const monthKey = keyExtractor(date);
-//         chartData[monthKey] = transformation(chartData[monthKey], value);
-//     });
-//     return chartData;
-// };
-
-const keyExtractor = (date) => `${date.getFullYear()}-${(date.getMonth() + 1)}-${(date.getDate()).toString().padStart(2, '0')}`;
-
-
-
-//CHART DATA
-// const getTransactionForChart = async (req, res, next) => {
-//     try {
-//         const transactions = await Transactions.find({}).sort({ createdAt: -1 });
-
-//         const chartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + 1);
-//         const priceChartData = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
-//         const dailyGasPrice = calculateChartData(transactions, keyExtractor, (prevValue, value) => (prevValue || 0) + value / 83);
-//         const avgGasPriceValues = calculateChartData(transactions, keyExtractor, (prevValue, gasPrice) => {
-//             if (!prevValue) {
-//                 prevValue = { totalGasPrice: 0, transactionCount: 0 };
-//             }
-//             const gasPriceGwei = gasPrice / 1e9;
-//             prevValue.totalGasPrice += gasPriceGwei;
-//             prevValue.transactionCount++;
-//             return prevValue;
-//         });
-
-//         const chartLabels = Object.keys(chartData);
-//         const chartValues = Object.values(chartData);
-//         const priceChartDataValues = Object.values(priceChartData);
-//         const dailyGasPriceValues = Object.values(dailyGasPrice);
-//         const avgGasPriceValuesList = Object.keys(avgGasPriceValues).map(monthKey => {
-//             const average = avgGasPriceValues[monthKey].totalGasPrice / avgGasPriceValues[monthKey].transactionCount;
-//             return isNaN(average) ? 0 : average;
-//         });
-//         const chart={
-//             chartLabels,
-//             chartValues,
-//             priceChartDataValues,
-//             avgGasPriceValues:avgGasPriceValuesList,
-//             dailyGasPriceValues
-//         }
-//         // res.status(200).json({ chartLabels, chartValues, priceChartDataValues, avgGasPriceValues: avgGasPriceValuesList, dailyGasPriceValues });
-//         res.status(200).json({ chart });
-
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
-
-
 //Correct code 
-
-// const getTransactionForChart = async (req, res, next) => {
-//     try {
-//         let dateFilter = []
-//         const timeRange = req.query.timerange
-//         if (timeRange && timeRange !== "all") {
-//             const startDate = new Date()
-//             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
-
-//             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
-//         }
-//         const transactions = await Transactions.aggregate([
-//             ...dateFilter,
-//             { $sort: { createdAt: -1 } },
-//             {
-//                 $group: {
-//                     _id: {
-//                         $dateToString: {
-//                             format: "%Y-%m-%d",
-//                             date: "$createdAt"
-//                         }
-//                     },
-//                     count: { $sum: 1 },
-//                     totalValue: {
-//                         $sum: {
-//                             $convert: {
-//                                 input: "$value",
-//                                 to: "long",
-//                                 onError: 0,
-//                                 onNull: 0
-//                             }
-//                         }
-//                     },
-//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
-//                     transactionCount: { $sum: 1 },
-//                     totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
-//                     blockCount: { $sum: { $cond: [{ $eq: ["$value", null] }, 0, 1] } },
-//                     totalReward: {
-//                         $sum: {
-//                             $ifNull: [
-//                                 {
-//                                     $convert: {
-//                                         input: "$value",
-//                                         to: "long",
-//                                         onError: 0,
-//                                         onNull: 0
-//                                     }
-//                                 },
-//                                 0
-//                             ]
-//                         }
-//                     }
-
-//                 }
-//             },
-//             {
-//                 $project: {
-//                     chartLabels: "$_id",
-//                     chartValues: "$count",
-//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
-//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
-//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
-//                     blocksAndRewardsChartValues: "$blockCount",
-//                     totalReward: "$totalReward",
-//                     transactionFee: { $divide: ["$totalCummulativeGasUsed", 83] }
-//                 }
-//             },
-//             { $sort: { chartLabels: -1 } }
-//         ]);
-
-//         const chart = {
-//             chartLabels: transactions.map(entry => entry.chartLabels),
-//             chartValues: transactions.map(entry => entry.chartValues),
-//             priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
-//             dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
-//             avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
-//             blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
-//             totalReward: transactions.map(entry => entry.totalReward),
-//             transactionFee: transactions.map(entry => entry.transactionFee)
-
-//         };
-
-//         res.status(200).json(chart);
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
-
-
-
-
-//only month gap 
 
 const getTransactionForChart = async (req, res, next) => {
     try {
-        let dateFilter = [];
-        const timeRange = req.query.timerange;
+        let dateFilter = []
+        const timeRange = req.query.timerange
         if (timeRange && timeRange !== "all") {
-            const startDate = new Date();
+            const startDate = new Date()
             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
 
             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
@@ -278,38 +122,16 @@ const getTransactionForChart = async (req, res, next) => {
             { $sort: { chartLabels: -1 } }
         ]);
 
-        // Modify chartLabels to include gaps
-        const chartLabels = transactions.map(entry => entry.chartLabels);
-        const chartValues = transactions.map(entry => entry.chartValues);
-        const priceChartDataValues = transactions.map(entry => entry.priceChartDataValues);
-        const dailyGasPriceValues = transactions.map(entry => entry.dailyGasPriceValues);
-        const avgGasPriceValues = transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues);
-        const blockCount = transactions.map(entry => entry.blocksAndRewardsChartValues);
-        const totalReward = transactions.map(entry => entry.totalReward);
-        const transactionFee = transactions.map(entry => entry.transactionFee);
-
-        // Insert gaps in chartLabels
-        const labeledIndices = [0];
-        for (let i = 1; i < chartLabels.length; i++) {
-            const currentDate = new Date(chartLabels[i]);
-            const prevDate = new Date(chartLabels[i - 1]);
-            if (currentDate.getMonth() !== prevDate.getMonth() || currentDate.getFullYear() !== prevDate.getFullYear()) {
-                labeledIndices.push(i);
-            }
-        }
-
-
-        const labeledChartLabels = chartLabels.map((label, index) => labeledIndices.includes(index) ? label : '');
-        
         const chart = {
-            chartLabels: labeledChartLabels,
-            chartValues,
-            priceChartDataValues,
-            dailyGasPriceValues,
-            avgGasPriceValues,
-            blockCount,
-            totalReward,
-            transactionFee
+            chartLabels: transactions.map(entry => entry.chartLabels),
+            chartValues: transactions.map(entry => entry.chartValues),
+            priceChartDataValues: transactions.map(entry => entry.priceChartDataValues),
+            dailyGasPriceValues: transactions.map(entry => entry.dailyGasPriceValues),
+            avgGasPriceValues: transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues),
+            blockCount: transactions.map(entry => entry.blocksAndRewardsChartValues),
+            totalReward: transactions.map(entry => entry.totalReward),
+            transactionFee: transactions.map(entry => entry.transactionFee)
+
         };
 
         res.status(200).json(chart);
@@ -318,6 +140,123 @@ const getTransactionForChart = async (req, res, next) => {
         next(error);
     }
 };
+
+
+
+
+
+
+//only month gap 
+
+// const getTransactionForChart = async (req, res, next) => {
+//     try {
+//         let dateFilter = [];
+//         const timeRange = req.query.timerange;
+//         if (timeRange && timeRange !== "all") {
+//             const startDate = new Date();
+//             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
+
+//             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
+//         }
+//         const transactions = await Transactions.aggregate([
+//             ...dateFilter,
+//             { $sort: { createdAt: -1 } },
+//             {
+//                 $group: {
+//                     _id: {
+//                         $dateToString: {
+//                             format: "%Y-%m-%d",
+//                             date: "$createdAt"
+//                         }
+//                     },
+//                     count: { $sum: 1 },
+//                     totalValue: {
+//                         $sum: {
+//                             $convert: {
+//                                 input: "$value",
+//                                 to: "long",
+//                                 onError: 0,
+//                                 onNull: 0
+//                             }
+//                         }
+//                     },
+//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
+//                     transactionCount: { $sum: 1 },
+//                     totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
+//                     blockCount: { $sum: { $cond: [{ $eq: ["$value", null] }, 0, 1] } },
+//                     totalReward: {
+//                         $sum: {
+//                             $ifNull: [
+//                                 {
+//                                     $convert: {
+//                                         input: "$value",
+//                                         to: "long",
+//                                         onError: 0,
+//                                         onNull: 0
+//                                     }
+//                                 },
+//                                 0
+//                             ]
+//                         }
+//                     }
+
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     chartLabels: "$_id",
+//                     chartValues: "$count",
+//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
+//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
+//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
+//                     blocksAndRewardsChartValues: "$blockCount",
+//                     totalReward: "$totalReward",
+//                     transactionFee: { $divide: ["$totalCummulativeGasUsed", 83] }
+//                 }
+//             },
+//             { $sort: { chartLabels: -1 } }
+//         ]);
+
+//         // Modify chartLabels to include gaps
+//         const chartLabels = transactions.map(entry => entry.chartLabels);
+//         const chartValues = transactions.map(entry => entry.chartValues);
+//         const priceChartDataValues = transactions.map(entry => entry.priceChartDataValues);
+//         const dailyGasPriceValues = transactions.map(entry => entry.dailyGasPriceValues);
+//         const avgGasPriceValues = transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues);
+//         const blockCount = transactions.map(entry => entry.blocksAndRewardsChartValues);
+//         const totalReward = transactions.map(entry => entry.totalReward);
+//         const transactionFee = transactions.map(entry => entry.transactionFee);
+
+//         // Insert gaps in chartLabels
+//         const labeledIndices = [0];
+//         for (let i = 1; i < chartLabels.length; i++) {
+//             const currentDate = new Date(chartLabels[i]);
+//             const prevDate = new Date(chartLabels[i - 1]);
+//             if (currentDate.getMonth() !== prevDate.getMonth() || currentDate.getFullYear() !== prevDate.getFullYear()) {
+//                 labeledIndices.push(i);
+//             }
+//         }
+
+
+//         const labeledChartLabels = chartLabels.map((label, index) => labeledIndices.includes(index) ? label : '');
+        
+//         const chart = {
+//             chartLabels: labeledChartLabels,
+//             chartValues,
+//             priceChartDataValues,
+//             dailyGasPriceValues,
+//             avgGasPriceValues,
+//             blockCount,
+//             totalReward,
+//             transactionFee
+//         };
+
+//         res.status(200).json(chart);
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
 
 
 
@@ -652,6 +591,4 @@ module.exports = {
     blocks,
     getBlockDetails,
     avgBlockSize
-    // blockDetailByBlockNumber,
-    // blockTxn
 }

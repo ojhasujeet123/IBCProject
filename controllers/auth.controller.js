@@ -5,11 +5,11 @@ require('dotenv').config();
 const jwtsecret = process.env.JWTSECRETKEY
 const time = process.env.VERIFICATIONTIMEOUT
 const { hashPassword,
-    comparePassword,
-    userVerified,
-    forgotHandle,
-    generateOTP,
-    deleteUnverifiedUser
+        comparePassword,
+        userVerified,
+        forgotHandle,
+        generateOTP,
+        deleteUnverifiedUser
 } = require('../utils/auth.utils')
 
 
