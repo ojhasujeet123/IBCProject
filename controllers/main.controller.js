@@ -444,7 +444,7 @@ const blocks = async (req, res, next) => {
         let skipCount = 0;
 
         while (blocksWithTransactions.length < limit && skipCount < countBlocks.length) {
-            const blocksData = await Transactions.find({}, 'blockNumber createdAt value from gasUsed')
+            const blocksData = await Transactions.find({}, 'blockNumber blockHash createdAt value from gasUsed')
                 .sort({ updatedAt: -1 })
                 .limit(limit - blocksWithTransactions.length)
                 .skip(parseInt((page - 1) * limit) + skipCount);
