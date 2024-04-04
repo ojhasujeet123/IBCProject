@@ -145,7 +145,6 @@ const getTransactionForChart = async (req, res, next) => {
 
 
 
-
 //only month gap 
 
 // const getTransactionForChart = async (req, res, next) => {
@@ -473,6 +472,52 @@ const blocks = async (req, res, next) => {
 };
 
 
+// const blocks = async (req, res, next) => {
+//     try {
+//         let { page = 1, limit = 10 } = req.query;
+//         page = parseInt(page);
+//         limit = parseInt(limit);
+
+//         const skipCount = (page - 1) * limit;
+
+//         const distinctBlocks = await Transactions.distinct('blockNumber').sort({ blockNumber: -1 });
+
+//         const blockNumbers = distinctBlocks.slice(skipCount, skipCount + limit);
+
+//         const blocksData = await Transactions.aggregate([
+//             { $match: { blockNumber: { $in: distinctBlocks } } },
+//             { $sort: { updatedAt: -1 } },
+//             { $group: {
+//                 _id: '$blockNumber',
+//                 blockNumber:{$first:"$blockNumber"},
+//                 blockHash: { $first: '$blockHash' },
+//                 createdAt: { $first: '$createdAt' },
+//                 value: { $sum: '$value' },
+//                 gasUsed: { $sum: '$gasUsed' },
+//                 transactionsCount: { $sum: 1 }
+//             } },
+//             { $project: {
+//                 _id: 0,
+//                 // blockNumber: '$_id',
+//                 blockNumber:1,
+//                 blockHash: 1,
+//                 createdAt: 1,
+//                 value: 1,
+//                 gasUsed: 1,
+//                 transactionsCount: 1,
+//                 elapsedTime: getElapsedTime({ $subtract: [new Date(), '$createdAt'] })
+//             } },
+//             { $limit: limit }
+//         ]);
+
+//         const countBlocks = distinctBlocks.length;
+
+//         res.status(200).json({ countBlocks, blocks: blocksData });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
 
 
 

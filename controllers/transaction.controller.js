@@ -72,23 +72,38 @@ getAllTransactions: async (req, res, next) => {
 
 //Transaction By hash
 
+    // getTransactionByHash: async (req, res, next) => {
+    //     try {
+    //         const transactionOfSingleUser = await Transactions.findOne({ hash: req.params.hash });
+
+    //         if (!transactionOfSingleUser) {
+    //             return res.status(404).json({ message: "Transaction not found for the given hash" });
+    //         }
+
+    //         res.status(200).json({ transactionOfSingleUser });
+    //     } catch (error) {
+    //         console.error(error);
+    //         next(error);
+    //     }
+    // },
+
+
     getTransactionByHash: async (req, res, next) => {
         try {
             const transactionOfSingleUser = await Transactions.findOne({ hash: req.params.hash });
-
+    
             if (!transactionOfSingleUser) {
                 return res.status(404).json({ message: "Transaction not found for the given hash" });
             }
-
-            res.status(200).json({ transactionOfSingleUser });
+    
+            // Wrap the transaction in an array before sending the response
+            res.status(200).json({ transactions: transactionOfSingleUser });
         } catch (error) {
             console.error(error);
             next(error);
         }
     },
-
-
-
+    
 
 
 
