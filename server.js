@@ -6,7 +6,7 @@ const transactionRoute=require('./routes/transaction.routes')
 const authenticationRoute=require('./routes/auth.routes');
 const { errorHandler } = require('./middleware/validateRoute');
 const session=require('express-session')
-const port = 5000;
+const port = process.env.PORT;
 
 
 connectDatabase()
@@ -32,5 +32,5 @@ app.get('/', (req, res) => {
 
 
 app.listen(port, () => {
-  console.log(`app listening at http://192.168.1.75:${port}`);
+  console.log(`app listening at localhost:${port}`);
 });
