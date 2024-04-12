@@ -2,29 +2,13 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 
-//AUTHENTICATION RELATED EMAIL MESSAGE FUNCTION
+
+
 function sendEmail(email, otp, type) {
 
-  try {
-    if (!email || !otp || !type) {
-      throw new Error("Email, otp, and type are required for sending an email");
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.AUTHEMAIL,
-        pass: process.env.EMAILPASS,
-      },
-    });
-
-    // Based on type send mail
-
     let subject, emailHTML;
-    if (type === 'forgot-password') {
+
+      if (type === 'forgot-password') {
       subject = "Password Reset ";
       emailHTML = generateForgotPasswordHTML(otp);
     } else if (type === 'accountVerification') {
@@ -37,25 +21,29 @@ function sendEmail(email, otp, type) {
     else {
       throw new Error("Invalid email type");
     }
+  var request = require('request');
+  var options = {
+    'method': 'POST',
+    'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+    'headers': {
+      'Authorization': process.env.MAILGUNAUTHENTICATION
+    },
+    formData: {
+      'from': 'JS Sandbox <info@mail-go.site>',
+      'to': `Dear Member <${email}>`,
+      'subject': subject,
+      'html': emailHTML
+    }
+  };
+  request(options, function (error, response) {
+    if (error) throw new Error(error);
+    console.log(response.body);
+  });
 
-    //Send Mail 
 
-    transporter.sendMail({
-      from: '"Sujeet Ojha" <sujeetjstech@gmail.com>',
-      to: email,
-      subject: subject,
-      html: emailHTML,
-    }).then(info => {
-      console.log("Email sent");
-    }).catch(console.error);
 
-  } catch (error) {
-    console.error(error);
-    throw new Error("Error sending email");
-  }
+
 }
-
-
 
 //Reset password HTML format
 
@@ -86,7 +74,7 @@ function generateForgotPasswordHTML(otp) {
             </p>
             <p>
                 Regards,<br>
-                <i>Sujeet Kumar Ojha</i>
+                <i>Team Glscan</i>
             </p>
         </div>
     </body>
@@ -123,7 +111,7 @@ function generateVerificationHTML(otp) {
             </p>
             <p>
                 Regards,<br>
-                <i>Sujeet Kumar Ojha</i>
+                <i>Team Glscan</i>
             </p>
         </div>
     </body>
@@ -154,7 +142,7 @@ function generatePasswordReset() {
             </p>
             <p>
                 Regards,<br>
-                <i>Sujeet Kumar Ojha</i>
+                <i>Team Glscan</i>
             </p>
         </div>
     </body>
@@ -185,38 +173,34 @@ function generatePasswordReset() {
 
 //forgot SUBMISSION EMAIL
 function sendQuerySubmissionEmail(name, email, query) {
-  try {
+  
     if (!name || !email || !query) {
       throw new Error("Name, email, and query are required for sending a query submission email");
     }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.AUTHEMAIL,
-        pass: process.env.EMAILPASS,
-      },
-    });
+
 
     const subject = "Query Submission";
     const emailHTML = generateQuerySubmissionHTML(name, email, query);
 
-    transporter.sendMail({
-      from: '"sujeet ojha" <sujeetjstech@gmail.com>',
-      to: email,
-      subject: subject,
-      html: emailHTML,
-    }).then(info => {
-      console.log("Query submission email sent");
-    }).catch(console.error);
-
-  } catch (error) {
-    console.error(error);
-    throw new Error("Error sending query submission email");
-  }
+    var request = require('request');
+    var options = {
+      'method': 'POST',
+      'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+      'headers': {
+        'Authorization': process.env.MAILGUNAUTHENTICATION
+      },
+      formData: {
+        'from': 'JS Sandbox <info@mail-go.site>',
+        'to': `Dear Member <${email}>`,
+        'subject': subject,
+        'html': emailHTML
+      }
+    };
+    request(options, function (error, response) {
+      if (error) throw new Error(error);
+      console.log(response.body);
+    });
 }
 
 function generateQuerySubmissionHTML(name, email, query) {
@@ -256,38 +240,28 @@ function generateQuerySubmissionHTML(name, email, query) {
 
 
 function sendForgotEmail(email,name,newpasword) {
-  try {
     if (!email && !name && !text) {
       throw new Error("email, and text are required for sending a query submission email");
     }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.AUTHEMAIL,
-        pass: process.env.EMAILPASS,
-      },
-    });
-
-    const subject = "Forgot password Link";
-    const emailHTML = forgotEmail(name,newpasword);
-
-    transporter.sendMail({
-      from: '"sujeet ojha" <sujeetjstech@gmail.com>',
-      to: email,
-      subject: subject,
-      html: emailHTML,
-    }).then(info => {
-      console.log("forgot link sent on  email successfully");
-    }).catch(console.error);
-
-  } catch (error) {
-    console.error(error);
-    throw new Error("Error sending query submission email");
-  }
+  var request = require('request');
+  var options = {
+    'method': 'POST',
+    'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+    'headers': {
+      'Authorization': process.env.MAILGUNAUTHENTICATION
+    },
+    formData: {
+      'from': 'JS Sandbox <info@mail-go.site>',
+      'to': `Dear Member <${email}>`,
+      'subject': "Forgot Password",
+      'html': forgotEmail(name,newpasword)
+    }
+  };
+  request(options, function (error, response) {
+    if (error) throw new Error(error);
+    console.log(response.body);
+  });
 }
 
 
@@ -305,13 +279,14 @@ function forgotEmail(name,newpasword) {
 
       <p>We received a request to reset your password. To proceed with the password reset, please click on the following link:</p>
 
-      <p> ${newpasword}</p>
+      <p> Auto Generated Password :${newpasword}</p>
+      <a href="https://glscan.io/LoginPage">For further process</a>
       <p>If you didn't initiate this request, you can ignore this email. The link will expire after a certain period for security reasons.</p>
 
       <p>Feel free to contact us if you have any questions or concerns.</p>
 
       <p>Best regards,<br>
-      sujeet ojha<br>
+       Js tech services<br>
     </body>
     </html>
   `;

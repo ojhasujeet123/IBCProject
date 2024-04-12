@@ -14,6 +14,7 @@ const web3 = new Web3(process.env.ETHEREUMNODEURL)
 
 
 
+
 //TOKEN TRANSACTION
 const tokenTransaction = async (req, res, next) => {
     try {
@@ -62,10 +63,12 @@ const getTransactionForChart = async (req, res, next) => {
             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
 
             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
+
+       
         }
         const transactions = await Transactions.aggregate([
             ...dateFilter,
-            { $sort: { createdAt: -1 } },
+            // { $sort: { createdAt: 1 } },
             {
                 $group: {
                     _id: {
@@ -145,123 +148,6 @@ const getTransactionForChart = async (req, res, next) => {
 
 
 
-//only month gap 
-
-// const getTransactionForChart = async (req, res, next) => {
-//     try {
-//         let dateFilter = [];
-//         const timeRange = req.query.timerange;
-//         if (timeRange && timeRange !== "all") {
-//             const startDate = new Date();
-//             startDate.setUTCMonth(startDate.getUTCMonth() - (timeRange === '1month' ? 1 : (timeRange === '6months' ? 6 : (timeRange === '1year' ? 12 : 0))));
-
-//             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
-//         }
-//         const transactions = await Transactions.aggregate([
-//             ...dateFilter,
-//             { $sort: { createdAt: -1 } },
-//             {
-//                 $group: {
-//                     _id: {
-//                         $dateToString: {
-//                             format: "%Y-%m-%d",
-//                             date: "$createdAt"
-//                         }
-//                     },
-//                     count: { $sum: 1 },
-//                     totalValue: {
-//                         $sum: {
-//                             $convert: {
-//                                 input: "$value",
-//                                 to: "long",
-//                                 onError: 0,
-//                                 onNull: 0
-//                             }
-//                         }
-//                     },
-//                     totalGasPrice: { $sum: { $divide: [{ $convert: { input: "$gasPrice", to: "long", onError: 0, onNull: 0 } }, 1e9] } },
-//                     transactionCount: { $sum: 1 },
-//                     totalCummulativeGasUsed: { $avg: "$cumulativeGasUsed" },
-//                     blockCount: { $sum: { $cond: [{ $eq: ["$value", null] }, 0, 1] } },
-//                     totalReward: {
-//                         $sum: {
-//                             $ifNull: [
-//                                 {
-//                                     $convert: {
-//                                         input: "$value",
-//                                         to: "long",
-//                                         onError: 0,
-//                                         onNull: 0
-//                                     }
-//                                 },
-//                                 0
-//                             ]
-//                         }
-//                     }
-
-//                 }
-//             },
-//             {
-//                 $project: {
-//                     chartLabels: "$_id",
-//                     chartValues: "$count",
-//                     priceChartDataValues: { $divide: ["$totalValue", 83] },
-//                     dailyGasPriceValues: { $divide: ["$totalGasPrice", 83] },
-//                     avgGasPriceValues: { $divide: ["$totalGasPrice", "$transactionCount"] },
-//                     blocksAndRewardsChartValues: "$blockCount",
-//                     totalReward: "$totalReward",
-//                     transactionFee: { $divide: ["$totalCummulativeGasUsed", 83] }
-//                 }
-//             },
-//             { $sort: { chartLabels: -1 } }
-//         ]);
-
-//         // Modify chartLabels to include gaps
-//         const chartLabels = transactions.map(entry => entry.chartLabels);
-//         const chartValues = transactions.map(entry => entry.chartValues);
-//         const priceChartDataValues = transactions.map(entry => entry.priceChartDataValues);
-//         const dailyGasPriceValues = transactions.map(entry => entry.dailyGasPriceValues);
-//         const avgGasPriceValues = transactions.map(entry => isNaN(entry.avgGasPriceValues) ? 0 : entry.avgGasPriceValues);
-//         const blockCount = transactions.map(entry => entry.blocksAndRewardsChartValues);
-//         const totalReward = transactions.map(entry => entry.totalReward);
-//         const transactionFee = transactions.map(entry => entry.transactionFee);
-
-//         // Insert gaps in chartLabels
-//         const labeledIndices = [0];
-//         for (let i = 1; i < chartLabels.length; i++) {
-//             const currentDate = new Date(chartLabels[i]);
-//             const prevDate = new Date(chartLabels[i - 1]);
-//             if (currentDate.getMonth() !== prevDate.getMonth() || currentDate.getFullYear() !== prevDate.getFullYear()) {
-//                 labeledIndices.push(i);
-//             }
-//         }
-
-
-//         const labeledChartLabels = chartLabels.map((label, index) => labeledIndices.includes(index) ? label : '');
-        
-//         const chart = {
-//             chartLabels: labeledChartLabels,
-//             chartValues,
-//             priceChartDataValues,
-//             dailyGasPriceValues,
-//             avgGasPriceValues,
-//             blockCount,
-//             totalReward,
-//             transactionFee
-//         };
-
-//         res.status(200).json(chart);
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
-
-
-
-
-
-
 
 
 
@@ -330,8 +216,6 @@ const avgBlockSize = async (req, res, next) => {
         next(error);
     }
 };
-
-
 
 
 
@@ -472,65 +356,6 @@ const blocks = async (req, res, next) => {
 };
 
 
-// const blocks = async (req, res, next) => {
-//     try {
-//         let { page = 1, limit = 10 } = req.query;
-//         page = parseInt(page);
-//         limit = parseInt(limit);
-
-//         const skipCount = (page - 1) * limit;
-
-//         const distinctBlocks = await Transactions.distinct('blockNumber').sort({ blockNumber: -1 });
-
-//         const blockNumbers = distinctBlocks.slice(skipCount, skipCount + limit);
-
-//         const blocksData = await Transactions.aggregate([
-//             { $match: { blockNumber: { $in: distinctBlocks } } },
-//             { $sort: { updatedAt: -1 } },
-//             { $group: {
-//                 _id: '$blockNumber',
-//                 blockNumber:{$first:"$blockNumber"},
-//                 blockHash: { $first: '$blockHash' },
-//                 createdAt: { $first: '$createdAt' },
-//                 value: { $sum: '$value' },
-//                 gasUsed: { $sum: '$gasUsed' },
-//                 transactionsCount: { $sum: 1 }
-//             } },
-//             { $project: {
-//                 _id: 0,
-//                 // blockNumber: '$_id',
-//                 blockNumber:1,
-//                 blockHash: 1,
-//                 createdAt: 1,
-//                 value: 1,
-//                 gasUsed: 1,
-//                 transactionsCount: 1,
-//                 elapsedTime: getElapsedTime({ $subtract: [new Date(), '$createdAt'] })
-//             } },
-//             { $limit: limit }
-//         ]);
-
-//         const countBlocks = distinctBlocks.length;
-
-//         res.status(200).json({ countBlocks, blocks: blocksData });
-//     } catch (error) {
-//         console.error(error);
-//         next(error);
-//     }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-//BLOCK DETAILS
 
 const getBlockDetails = async (req, res, next) => {
     try {
