@@ -12,6 +12,8 @@ const Transactions = db.transactions;
 const CurrentBlock = db.currentBlock;
 const cron = require('node-cron');
 
+
+//comment 
 let Scanblock = async( ) => {
     
     const latest = await web3.eth.getBlockNumber() 
