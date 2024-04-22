@@ -1,0 +1,31 @@
+{
+  "name": "ibct",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "ojha",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.2",
+    "ethereum-input-data-decoder": "^0.4.2",
+    "express": "^4.19.2",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.4",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.8",
+    "nodemon": "^3.1.0",
+    "request": "^2.88.2",
+    "twilio": "^4.20.1",
+    "web3": "^4.8.0",
+    "zeptomail": "^5.0.0"
+  },
+  "description": ""
+}
