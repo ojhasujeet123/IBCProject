@@ -6,7 +6,8 @@ const abi = [{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":
 const decoder = new InputDataDecoder(abi); 
 require('dotenv').config() 
 console.log('process.env.ETHEREUMNODEURL ' , process.env.ETHEREUMNODEURL)
-const web3 = new Web3('https://glc-dataseed.thealliance.co.in');
+// const web3 = new Web3('https://glc-dataseed.thealliance.co.in');
+const web3= new Web3(process.env.ETHEREUMNODEURL)
 const db = require("../models");
 const Transactions = db.transactions;
 const CurrentBlock = db.currentBlock;
