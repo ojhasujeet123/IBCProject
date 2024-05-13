@@ -2,21 +2,21 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 
-//check functionality of mailgun
 
-function sendEmail(email, otp, type) {
+
+function sendEmail(name,email, otp, type) {
 
     let subject, emailHTML;
 
       if (type === 'forgot-password') {
       subject = "Password Reset ";
-      emailHTML = generateForgotPasswordHTML(otp);
+      emailHTML = generateForgotPasswordHTML(name ,otp);
     } else if (type === 'accountVerification') {
       subject = "Verify your account ";
-      emailHTML = generateVerificationHTML(otp);
+      emailHTML = generateVerificationHTML(name,otp);
     } else if(type === "password reset"){
           subject="Password Updated Successfully",
-          emailHTML=generatePasswordReset()
+          emailHTML=generatePasswordReset(name)
     }
     else {
       throw new Error("Invalid email type");
@@ -29,7 +29,7 @@ function sendEmail(email, otp, type) {
       'Authorization': process.env.MAILGUNAUTHENTICATION
     },
     formData: {
-      'from': 'JS Sandbox <info@mail-go.site>',
+      'from': 'GLSCAN <info@mail-go.site>',
       'to': `Dear Member <${email}>`,
       'subject': subject,
       'html': emailHTML
@@ -47,106 +47,150 @@ function sendEmail(email, otp, type) {
 
 //Reset password HTML format
 
-function generateForgotPasswordHTML(otp) {
+function generateForgotPasswordHTML(name,otp) {
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Forgot Password OTP</title>
-    </head>
-    <body>
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-            <h2>Forgot Password OTP</h2>
-            <p>
-                Hello,<br>
-                We received a request to reset your password. Please use the following One Time Password (OTP) to complete the process:
-            </p>
-            <p style="background-color: #f2f2f2; padding: 10px; font-size: 1.2em; border-radius: 5px; text-align:center">
-                <strong>${otp}</strong>
-            </p>
-            <p>
-                This OTP is valid for a short period, so please use it promptly to reset your password.
-            </p>
-            <p>
-                If you did not request a password reset, please ignore this email.
-            </p>
-            <p>
-                Regards,<br>
-                <i>Team Glscan</i>
-            </p>
-        </div>
-    </body>
-    </html>
+   <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot password otp</title>
+</head>
+
+<body>
+  <div style="text-align: center;max-width: 600px;margin: auto;">
+    <div style="background-color: #2e2f2f;justify-content: center;height: 50px;">
+      <img
+        src="https://res.cloudinary.com/dp2jq1xi2/image/upload/v1715599272/exchange/glc_logo/h7qusqff6ofwebkaajpe.png"
+        style="margin-top: 0px;
+      width: 70px; "></img>
+    </div>
+  </div>
+  <div style="text-align: left;max-width: 600px;margin: auto;padding-left: 10px;color: #2e2f2f;font-family: serif">
+    <h2>Email Verification</h2>
+    <p>
+      Hello ${name},<br>
+      <br>
+      Thank you for registering. To complete your registration, please use the following verification otp:
+    </p>
+    <p>
+      <strong style="color: rgb(10, 151, 34);">${otp}</strong>
+    </p>
+    <p>
+      This otp will expire after a certain period, so make sure to use it promptly.
+    </p>
+    <p>
+      If you did not sign up for this service, please disregard this email.
+    </p>
+    <p>
+      Regards,<br>
+      <i>Team Glscan</i>
+    </p>
+
+  </div>
+</body>
+</body>
+
+</html>
   `;
 }
 
 //Account verification HTML Template
 
-function generateVerificationHTML(otp) {
+function generateVerificationHTML(name ,otp) {
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Account Verification</title>
-    </head>
-    <body>
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-            <h2>Email Verification</h2>
-            <p>
-                Hello,<br>
-                Thank you for registering. To complete your registration, please use the following verification otp:
-            </p>
-            <p style="background-color: #f2f2f2; padding: 10px; font-size: 1.2em; border-radius: 5px; text-align:center">
-                <strong>${otp}</strong>
-            </p>
-            <p>
-                This otp will expire after a certain period, so make sure to use it promptly.
-            </p>
-            <p>
-                If you did not sign up for this service, please disregard this email.
-            </p>
-            <p>
-                Regards,<br>
-                <i>Team Glscan</i>
-            </p>
-        </div>
-    </body>
-    </html>
+  <!DOCTYPE html>
+  <html lang="en">
+  
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verification</title>
+  </head>
+  
+  <body>
+    <div style="text-align: center;max-width: 600px;margin: auto;">
+      <div style="background-color: #2e2f2f;justify-content: center;height: 50px;">
+        <img
+          src="https://res.cloudinary.com/dp2jq1xi2/image/upload/v1715599272/exchange/glc_logo/h7qusqff6ofwebkaajpe.png"
+          style="margin-top: 0px;
+        width: 70px; "></img>
+      </div>
+    </div>
+    <div style="text-align: left;max-width: 600px;margin: auto;padding-left: 10px;color: #2e2f2f;font-family: serif">
+      <h2>Email Verification</h2>
+      <p>
+        Hello ${name},<br>
+        <br>
+        Thank you for registering. To complete your registration, please use the following verification otp:
+      </p>
+      <p>
+        <strong style="color: rgb(10, 151, 34);">${otp}</strong>
+      </p>
+      <p>
+        This otp will expire after a certain period, so make sure to use it promptly.
+      </p>
+      <p>
+        If you did not sign up for this service, please disregard this email.
+      </p>
+      <p>
+        Regards,<br>
+        <i>Team Glscan</i>
+      </p>
+  
+    </div>
+  </body>
+  </body>
+  
+  </html>
   `;
 }
 
 
 // Password Reset Success HTML Template
-function generatePasswordReset() {
+function generatePasswordReset(name) {
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Reset Success</title>
-    </head>
-    <body>
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-            <h2>Password Reset Successful</h2>
-            <p>
-                Hello,<br>
-                Your password has been successfully reset. You can now use your new password to log in to your account.
-            </p>
-            <p>
+  <!DOCTYPE html>
+  <html lang="en">
+  
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password reset successfully</title>
+  </head>
+  
+  <body>
+    <div style="text-align: center;max-width: 600px;margin: auto;">
+      <div style="background-color: #2e2f2f;justify-content: center;height: 50px;">
+        <img
+          src="https://res.cloudinary.com/dp2jq1xi2/image/upload/v1715599272/exchange/glc_logo/h7qusqff6ofwebkaajpe.png"
+          style="margin-top: 0px;
+        width: 70px; "></img>
+      </div>
+    </div>
+    <div style="text-align: left;max-width: 600px;margin: auto;padding-left: 10px;color: #2e2f2f;font-family: serif">
+      <h2>Password reset successfully</h2>
+      <p>
+        Hello ${name},<br>
+        <br>
+                       Your password has been successfully reset. You can now use your new password to log in to your account.
+
+      </p>
+   
                 If you did not perform this action, please contact our support team immediately.
-            </p>
-            <p>
-                Regards,<br>
-                <i>Team Glscan</i>
-            </p>
-        </div>
-    </body>
-    </html>
+      </p>
+      
+      <p>
+        Regards,<br>
+        <i>Team Glscan</i>
+      </p>
+  
+    </div>
+  </body>
+  </body>
+  
+  </html>
   `;
 }
 
@@ -191,7 +235,7 @@ function sendQuerySubmissionEmail(name, email, query) {
         'Authorization': process.env.MAILGUNAUTHENTICATION
       },
       formData: {
-        'from': 'JS Sandbox <info@mail-go.site>',
+        'from': 'GLSCAN <info@mail-go.site>',
         'to': `Dear Member <${email}>`,
         'subject': subject,
         'html': emailHTML
@@ -252,7 +296,7 @@ function sendForgotEmail(email,name,newpasword) {
       'Authorization': process.env.MAILGUNAUTHENTICATION
     },
     formData: {
-      'from': 'JS Sandbox <info@mail-go.site>',
+      'from': 'GLSCAN <info@mail-go.site>',
       'to': `Dear Member <${email}>`,
       'subject': "Forgot Password",
       'html': forgotEmail(name,newpasword)
@@ -267,28 +311,39 @@ function sendForgotEmail(email,name,newpasword) {
 
 function forgotEmail(name,newpasword) {
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Forgot Email</title>
-    </head>
-    <body>
-      <p>Dear ${name},</p>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Email</title>
+  </head>
+  <body>
+      <div style="text-align: center;max-width: 600px;margin: auto;">
+    <div style="background-color: #2e2f2f;justify-content: left;height: 50px;">
+      <img
+        src="https://res.cloudinary.com/dp2jq1xi2/image/upload/v1715599272/exchange/glc_logo/h7qusqff6ofwebkaajpe.png"
+        style="margin-top: 0px;
+      width: 70px; "></img>
+    </div>
+    <div style="text-align: left;max-width: 600px;margin: auto;padding-left: 10px;color: #2e2f2f;font-family: serif">
+    <p>Dear ${name},</p>
 
-      <p>We received a request to reset your password. To proceed with the password reset, please click on the following link:</p>
+    <p>We received a request to reset your password. To proceed with the password reset, please click on the following link:</p>
 
-      <p> Auto Generated Password :${newpasword}</p>
-      <a href="https://glscan.io/LoginPage">For further process</a>
-      <p>If you didn't initiate this request, you can ignore this email. The link will expire after a certain period for security reasons.</p>
+    <p> Auto Generated Password :${newpasword}</p>
+    <a href="https://glscan.io/LoginPage">For further process click here </a>
+    <p>If you didn't initiate this request, you can ignore this email. The link will expire after a certain period for security reasons.</p>
 
-      <p>Feel free to contact us if you have any questions or concerns.</p>
+    <p>Feel free to contact us if you have any questions or concerns.</p>
 
-      <p>Best regards,<br>
-       Js tech services<br>
-    </body>
-    </html>
+       <p>
+      Regards,<br>
+      <i>Team Glscan</i>
+    </p>
+     </div>
+  </body>
+  </html>
   `;
 }
 

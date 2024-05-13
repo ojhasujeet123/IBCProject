@@ -43,7 +43,7 @@ const UserController = {
             });
 
             //Email send for account verification
-            await sendEmail(email, user.verifyToken, "accountVerification")
+            await sendEmail(user.username,email, user.verifyToken, "accountVerification")
 
             // if account not verified data stored in database for 15 minutes
             setTimeout(async () => {
@@ -95,7 +95,7 @@ const UserController = {
                 const newOtp = generateOTP()
                 user.verifyToken = newOtp
                 await user.save()
-                await sendEmail(email, newOtp, "accountVerification")
+                await sendEmail(user.username,email, newOtp, "accountVerification")
                 res.status(200).json({ message: "Otp Resend Successfully" })
             }
 
@@ -214,7 +214,7 @@ const UserController = {
             user.password = securedPassword
 
             await user.save()
-            await sendEmail(user.email, " ", "password reset")
+            await sendEmail(user.username,user.email, " ", "password reset")
 
             res.status(200).json({ message: "Password updated successfully" })
         } catch (error) {
@@ -329,7 +329,7 @@ const accountSettings = async (req, res, next) => {
             if (newPassword !== confirmPassword) {
                 return res.status(400).json({ message: "Password do not match" });
             }
-
+            console.log("passwords ...",newPassword,confirmPassword);
             const updatePassword = await hashPassword(newPassword);
             console.log("updatePassword",updatePassword);
             user.password = updatePassword;
@@ -341,7 +341,7 @@ const accountSettings = async (req, res, next) => {
        
 
         // Send the response only once at the end of the function
-        return res.status(200).json({ success: true, user });
+        return res.status(200).json({ success: true, message:"Email updated successfully", user });
     } catch (error) {
         console.error(error);
         next(error);

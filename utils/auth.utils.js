@@ -9,6 +9,7 @@ const crypto=require('crypto')
 async function hashPassword(password) {
     try {
         const saltRounds = 12;
+        console.log("inside hash password .............",password);
         return await bcrypt.hash(password, saltRounds);
     } catch (error) {
         throw new Error("password Hashing failed")
