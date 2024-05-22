@@ -20,5 +20,4 @@ router.post('/account-settings',authTokenVerify,accountSettings)
 router.get('/user-details',authTokenVerify,userController.userProfile)
 router.delete('/delete/:id',userController.userDelete)
 
-
 module.exports=router
