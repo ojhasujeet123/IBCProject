@@ -249,6 +249,10 @@ const accounts = async (req, res, next) => {
 
         const holdersAggregate = await Holders.aggregate([
             {
+                $match: { balance: { $gt: 0 } } // exclude accounts with balance 0
+              },
+            
+            {
                 $sort: { "balance": sortOrder }
             },
             {
@@ -278,8 +282,8 @@ const accounts = async (req, res, next) => {
         const holdersWithTransactions = holdersAggregate.map(holder => {
             const transactionData = transactionsAggregate.find(data => data._id === holder.address) || { totalTransactions: 0 };
 
-            const transactionPercentage = ((transactionData.totalTransactions / totalTxn) * 100).toFixed(2);
-
+            console.log("balance------:",web3.utils.fromWei(holder.balance,"ether"));
+            const transactionPercentage = ((web3.utils.fromWei(holder.balance,"ether") / 310000000) * 100).toFixed(7);
             return {
                 ...holder,
                 totalTransactions: transactionData.totalTransactions,
@@ -287,14 +291,14 @@ const accounts = async (req, res, next) => {
             };
         });
 
-        const accountHolder = await Holders.find({}).countDocuments()
-
+        const accountHolder = await Holders.find({ balance: { $gt: 0 } }).countDocuments()
         res.status(200).json({ accountHolder, holders: holdersWithTransactions });
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
+
 
 
 
