@@ -4,6 +4,7 @@ const transactionController=require('../controllers/transaction.controller')
 const {tokenTransaction,getTransactionForChart, contactquery, accounts,blocks,getBlockDetails,avgBlockSize}=require('../controllers/main.controller')
 const{index}=require('../controllers/api.controller')
 router.get('/tokentxns',tokenTransaction)
+const {updateHoldersBalances} = require("../controllers/transaction.controller")
 
 router.get('/transaction',transactionController.getAllTransactions)
 router.get('/transaction/chart',getTransactionForChart)
@@ -16,6 +17,8 @@ router.get('/blocks',blocks)
 router.get('/blocks/blocknum/:blocks',getBlockDetails)
 router.get('/txn/blockavg',avgBlockSize)
 // router.get('/blocks/blocknum/:blocks/txn',blockTxn)
+
+router.post('/updateholder',updateHoldersBalances)
 
 router.get('/index',index)
 
