@@ -12,6 +12,7 @@ const db = require("../models");
 const Transactions = db.transactions;
 const CurrentBlock = db.currentBlock;
 const cron = require('node-cron');
+const Holder = require('../models/holder.model');
 
 let Scanblock = async( ) => {
     
@@ -171,21 +172,21 @@ let updateUserBalanxe = async (address, balance) => {
   }
 
 
-const updateHoldersBalances = async () => {
-    const transactions = await Transactions.find({}).lean();
+// const updateHoldersBalances = async () => {
+//     const transactions = await Transactions.find({}).lean();
   
-    for (const transaction of transactions) {
-      try {
-        const fromAddress = transaction.from;
-        const toAddress = transaction.to;
+//     for (const transaction of transactions) {
+//       try {
+//         const fromAddress = transaction.from;
+//         const toAddress = transaction.to;
   
-        await checkUserBalance(fromAddress);
-        await checkUserBalance(toAddress);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
+//         await checkUserBalance(fromAddress);
+//         await checkUserBalance(toAddress);
+//       } catch (err) {
+//         console.error(err);
+//       }
+//     }
+//   };
 
 
 
@@ -268,22 +269,7 @@ getAllTransactions: async (req, res, next) => {
 
 
 
-//Transaction By hash
 
-    // getTransactionByHash: async (req, res, next) => {
-    //     try {
-    //         const transactionOfSingleUser = await Transactions.findOne({ hash: req.params.hash });
-
-    //         if (!transactionOfSingleUser) {
-    //             return res.status(404).json({ message: "Transaction not found for the given hash" });
-    //         }
-
-    //         res.status(200).json({ transactionOfSingleUser });
-    //     } catch (error) {
-    //         console.error(error);
-    //         next(error);
-    //     }
-    // },
 
 
     getTransactionByHash: async (req, res, next) => {
@@ -315,33 +301,39 @@ getAllTransactions: async (req, res, next) => {
             const { page = 1, limit = 10 } = req.query;
             const skip = (page - 1) * limit;
             
-            const [txnCount,transactions]=await Promise.all([
-                await Transactions.find({$or: [{ from: req.params.address }, { to: req.params.address }]}).countDocuments(),
-                await Transactions.find({
-                        $or: [{ from: req.params.address }, { to: req.params.address }]
-                    }).sort({createdAt:-1}).skip(skip).limit(limit)
-            ])
-
+            const [txnCount, transactions] = await Promise.all([
+                Transactions.find({ $or: [{ from: req.params.address }, { to: req.params.address }] }).countDocuments(),
+                Transactions.find({
+                    $or: [{ from: req.params.address }, { to: req.params.address }]
+                }).sort({ createdAt: -1 }).skip(skip).limit(limit)
+            ]);
+    
             if (!transactions || transactions.length === 0) {
                 return res.status(404).json({ message: "Transactions not found for this address" });
             }
             
+
+            const addressBalance =await Holder.findOne({address:req.params.address },{etherBalance:1,contractAddress:0})
+
+
             const formattedTransactions = transactions.map(transaction => {
-                // Assuming createdAt field is a Date object, you can format it using toLocaleString or any other formatting method
                 return {
-                    ...transaction._doc,
-                    createdAt: getElapsedTime(transaction.createdAt) // Assuming formatDate is your formatting function
+                   ...transaction._doc,
+                    createdAt: getElapsedTime(transaction.createdAt) ,
+                    addressBalance: addressBalance.etherBalance
+
                 };
             });
     
-            res.status(200).json({ txnCount,transactionByAddress: formattedTransactions });
+  
+    
+            res.status(200).json({ txnCount, transactionByAddress: formattedTransactions});
         } catch (error) {
             console.error(error);
             next(error);
         }
-    },  
-    
-    // Example formatting function
+    },
+
 
     
 };
@@ -349,7 +341,7 @@ getAllTransactions: async (req, res, next) => {
 
 
 
-module.exports={updateHoldersBalances,...transactionController}
+module.exports={...transactionController}
 
 
 
