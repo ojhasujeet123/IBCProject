@@ -15,8 +15,7 @@ const cron = require('node-cron');
 const Holder = require('../models/holder.model');
 
 let Scanblock = async( ) => {
-    
-    const latest = await web3.eth.getBlockNumber() 
+    const latest = await web3.eth.getBlockNumber()  
     console.log('its latest block ' , latest) 
     let lastBlock = await CurrentBlock.findOne({});
     let i =  lastBlock.blockNumber;
