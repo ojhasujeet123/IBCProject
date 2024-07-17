@@ -28,7 +28,7 @@ const UserController = {
             const { username, email, password, confirmPassword } = req.body;
 
             if (await User.findOne({ email })) {
-                return res.status(400).json({ errors: "Sorry!  email already exists" });
+                return res.status(400).json({ errors: "Sorry! Email already exists" });
             }
 
             const securedPassword = await hashPassword(password);
@@ -96,7 +96,7 @@ const UserController = {
                 user.verifyToken = newOtp
                 await user.save()
                 await sendEmail(user.username,email, newOtp, "accountVerification")
-                res.status(200).json({ message: "Otp Resend Successfully" })
+                res.status(200).json({success:true, message: "Otp Resend Successfully" })
             }
 
         } catch (error) {
@@ -176,7 +176,7 @@ const UserController = {
             const { email } = req.body;
             let user = await User.findOne({ email });
             if (!user) {
-                return res.status(404).json({ message: "User not found" })
+                return res.status(404).json({ message: " Please enter your correct Email ID" })
             }
             //Handle forgot With reset
             forgotHandle(res, user, email);
@@ -216,7 +216,7 @@ const UserController = {
             await user.save()
             await sendEmail(user.username,user.email, " ", "password reset")
 
-            res.status(200).json({ message: "Password updated successfully" })
+            res.status(200).json({success:true, message: "Password updated successfully" })
         } catch (error) {
             console.error(error);
             next(error)

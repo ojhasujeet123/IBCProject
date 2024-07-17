@@ -89,7 +89,7 @@ async function forgotHandle(res, user, email) {
     user.password=await hashPassword(newpassword)
     user.save()
     await sendForgotEmail(email,user.username,newpassword);
-    res.status(200).json({ message: "Link sent successfully", user })
+    res.status(200).json({success:true, message: " Password recovery link sent to your Email", user })
 }
 
 

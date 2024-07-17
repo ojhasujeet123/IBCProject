@@ -26,7 +26,7 @@ function sendEmail(name,email, otp, type) {
     'method': 'POST',
     'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
     'headers': {
-      'Authorization': process.env.MAILGUNAUTHENTICATION
+      'Authorization':'Basic YXBpOmVlZWY5NTk3YWRhOGJiZTkyZTk1MDYxMTlmYjQyN2NmLWY2OGEyNmM5LWIwMDU4Zjky'
     },
     formData: {
       'from': 'GLSCAN <info@mail-go.site>',
@@ -248,39 +248,75 @@ function sendQuerySubmissionEmail(name, email, query) {
 }
 
 function generateQuerySubmissionHTML(name, email, query) {
+
+
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Query Submission</title>
-    </head>
-    <body>
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-            <h2>Query Submission</h2>
-            <p>
-                Hello ${name},<br>
-                Thank you for reaching out to us with your query. We have received the following information:
-            </p>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Query:</strong> ${query}</p>
-            <p>
-                We will get back to you as soon as possible with a response to your query. If you have any additional information to provide, please feel free to reply to this email.
-            </p>
-            <p>
-                Thank you for your patience and understanding.
-            </p>
-            <p>
-                Regards,<br>
-                <i>Your Name or Company Name</i>
-            </p>
-        </div>
-    </body>
-    </html>
+  <!DOCTYPE html>
+  <html lang="en">
+  
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Submission</title>
+  </head>
+  
+  <body>
+    <div style="text-align: center;max-width: 600px;margin: auto;">
+      <div style="background-color: #2e2f2f;justify-content: center;height: 50px;">
+        <img
+          src="https://res.cloudinary.com/dp2jq1xi2/image/upload/v1715599272/exchange/glc_logo/h7qusqff6ofwebkaajpe.png"
+          style="margin-top: 0px;
+        width: 70px; "></img>
+      </div>
+    </div>
+    <div style="text-align: left;max-width: 600px;margin: auto;padding-left: 10px;color: #2e2f2f;font-family: serif">
+             <h2>Query Submission</h2>
+             <p>
+                 Hello ${name},<br>
+                 Thank you for reaching out to us with your query. We have received the following information:
+             </p>
+             <p><strong>Name:</strong> ${name}</p>
+             <p><strong>Email:</strong> ${email}</p>
+             <p><strong>Query:</strong> ${query}</p>
+             <p>
+                 We will get back to you as soon as possible with a response to your query. If you have any additional information to provide, please feel free to reply to this email.
+             </p>
+             <p>
+                 Thank you for your patience and understanding.
+             </p>
+      <p>
+        Regards,<br>
+        <i>Team Glscan</i>
+      </p>
+  
+    </div>
+  </body>
+  </body>
+  
+  </html>
   `;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function sendForgotEmail(email,name,newpasword) {
