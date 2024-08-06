@@ -443,7 +443,7 @@ const contactquery = async (req, res, next) => {
 
         await newContactQuery.save()
         await sendQuerySubmissionEmail(name, email, "general Inquiry")
-        res.status(200).json({success:true, newContactQuery, message: "Contact query saved successfully" })
+        res.status(200).json({success:true, newContactQuery, message: "Contact query has been saved successfully" })
     } catch (error) {
         console.error(error);
         next(error)

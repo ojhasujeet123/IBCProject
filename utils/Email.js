@@ -279,7 +279,7 @@ function generateQuerySubmissionHTML(name, email, query) {
              <p><strong>Email:</strong> ${email}</p>
              <p><strong>Query:</strong> ${query}</p>
              <p>
-                 We will get back to you as soon as possible with a response to your query. If you have any additional information to provide, please feel free to reply to this email.
+                 We will get back to you as soon as possible with a response to your query. This email is for informational purposes only. Please do not reply
              </p>
              <p>
                  Thank you for your patience and understanding.

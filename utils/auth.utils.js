@@ -60,6 +60,10 @@ function generateOTP() {
 
 
 
+
+
+
+
 //Handle user verification
 
 async function userVerified(res, user) {
@@ -72,7 +76,7 @@ async function userVerified(res, user) {
             user.isVerified = true
             user.verifyToken = undefined
             await user.save();
-            res.status(200).json({ message: "User Verified", user });
+            res.status(200).json({success:true, message: "User Verified", user });
         } else {
             res.status(400).json({ message: "Verification token has been expired" });
         }
@@ -82,6 +86,13 @@ async function userVerified(res, user) {
     }
 }
 
+
+
+
+
+
+
+
 //Forgot password Handle
 
 async function forgotHandle(res, user, email) {
@@ -89,8 +100,14 @@ async function forgotHandle(res, user, email) {
     user.password=await hashPassword(newpassword)
     user.save()
     await sendForgotEmail(email,user.username,newpassword);
-    res.status(200).json({success:true, message: " Password recovery link sent to your Email", user })
+    res.status(200).json({success:true, message: "A system-generated password has been sent to your email.", user })
 }
+
+
+
+
+
+
 
 
 
@@ -103,6 +120,13 @@ async function deleteUnverifiedUser(user) {
         console.log(`user with email ${deleteUser.email} deleted due to non-verified`);
     }
 }
+
+
+
+
+
+
+
 
 
 const getElapsedTime = (timestamp) => {

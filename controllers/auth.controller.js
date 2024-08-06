@@ -26,8 +26,8 @@ const UserController = {
     userRegister: async (req, res, next) => {
         try {
             const { username, email, password, confirmPassword } = req.body;
-
-            if (await User.findOne({ email })) {
+            let userExist=await User.findOne({ email:email })
+            if (userExist) {
                 return res.status(400).json({ errors: "Sorry! Email already exists" });
             }
 
@@ -299,53 +299,107 @@ const UserController = {
 
 
 
+// const accountSettings = async (req, res, next) => {
+//     try {
+//         const userId = req.userId;
+//         let user = await User.findById(userId); 
+//         const { email, oldPassword, newPassword, confirmPassword } = req.body;
+//         console.log("req.body",req.body);
+//         console.log("Mypassword",oldPassword,newPassword, confirmPassword);
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+//         if(email && oldPassword){
+//             const correctPassword = await comparePassword(oldPassword, user.password);
+//             if (!correctPassword) {
+//                 return res.status(400).json({ message: "Old password wrong" });
+//             }else{
+//                 user.email=email
+//             }
+//         }
+
+//         if (oldPassword && newPassword && confirmPassword) {
+//             console.log(user.password);
+//             const correctPassword = await comparePassword(oldPassword, user.password);
+//             console.log(correctPassword);
+//             if (!correctPassword) {
+//                 return res.status(400).json({ message: "Old password wrong" });
+//             }
+
+//             if (newPassword !== confirmPassword) {
+//                 return res.status(400).json({ message: "Password do not match" });
+//             }
+//             console.log("passwords ...",newPassword,confirmPassword);
+//             const updatePassword = await hashPassword(newPassword);
+//             console.log("updatePassword",updatePassword);
+//             user.password = updatePassword;
+//             await user.save();
+
+//             return res.status(200).json({ success: true, message:"Password updated successfully", user });
+
+//         }
+
+//         // Save the user only if there are changes
+
+//             await user.save();
+       
+
+//         // Send the response only once at the end of the function
+//         return res.status(200).json({ success: true, message:"Email updated successfully", user });
+//     } catch (error) {
+//         console.error(error);
+//         next(error);
+//     }
+// };
+
+
+
 const accountSettings = async (req, res, next) => {
     try {
         const userId = req.userId;
         let user = await User.findById(userId); 
         const { email, oldPassword, newPassword, confirmPassword } = req.body;
-        console.log("req.body",req.body);
-        console.log("Mypassword",oldPassword,newPassword, confirmPassword);
+        
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        if(email && oldPassword){
+        
+        if (email && oldPassword) {
             const correctPassword = await comparePassword(oldPassword, user.password);
             if (!correctPassword) {
-                return res.status(400).json({ message: "Old password wrong" });
-            }else{
-                user.email=email
+                return res.status(400).json({ message: "The old password is wrong" });
+            } else {
+                user.email = email;
+                await user.save();
+                return res.status(200).json({ success: true, message: "Email updated successfully", user });
             }
         }
 
         if (oldPassword && newPassword && confirmPassword) {
-            console.log(user.password);
             const correctPassword = await comparePassword(oldPassword, user.password);
-            console.log(correctPassword);
             if (!correctPassword) {
-                return res.status(400).json({ message: "Old password wrong" });
+                return res.status(400).json({ message: "The old password is wrong" });
             }
 
             if (newPassword !== confirmPassword) {
-                return res.status(400).json({ message: "Password do not match" });
+                return res.status(400).json({ message: "Passwords do not match" });
             }
-            console.log("passwords ...",newPassword,confirmPassword);
+            
             const updatePassword = await hashPassword(newPassword);
-            console.log("updatePassword",updatePassword);
             user.password = updatePassword;
+            await user.save();
+            return res.status(200).json({ success: true, message: "Password updated successfully", user });
         }
 
-        // Save the user only if there are changes
+        await user.save();
+        return res.status(200).json({ success: true, message: "No changes made", user });
 
-            await user.save();
-       
-
-        // Send the response only once at the end of the function
-        return res.status(200).json({ success: true, message:"Email updated successfully", user });
     } catch (error) {
         console.error(error);
         next(error);
     }
 };
+
+
 
 module.exports = { ...UserController, accountSettings };
