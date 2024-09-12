@@ -2,15 +2,80 @@ const Transactions = require('../models/transactions.model')
 const User = require('../models/user.model')
 const ContactQuery = require('../models/query.model')
 const Holders = require('../models/holder.model')
+const verifiedContract=require('../models/verfiedContract.model')
 const { sendQuerySubmissionEmail } = require('../utils/Email')
 const { getElapsedTime } = require('../utils/auth.utils')
 require('dotenv').config();
 const { Web3 } = require('web3')
-const { set } = require('mongoose')
-const web3 = new Web3(process.env.ETHEREUMNODEURL)
+const { EVM } = require("evm");
+const Panoramix = require('like-panoramix')
+
+const web3 = new Web3('https://glc-dataseed.glscan.io/')
+const panoramix = new Panoramix(({
+    provider:"https://glc-dataseed.glscan.io/"
+}))
+
+console.log("panoramix...............",panoramix);
 
 
+/*
+    sujeet ojha 06-09-24
+    controller of getting bytecode ,opcodes and decompile bytecode through the contract address
+*/
 
+const deployedBytecode = async (req, res, next) => {
+    try {
+        let contract = await Transactions.findOne({
+             contractAddress: req.body.contractAddress 
+            }, {
+                 contractAddress: 1, _id: 0 
+            });
+
+            let status=await verifiedContract.findOne({contractAddress: req.body.contractAddress})
+        console.log("contractAddress", contract);
+
+        if (!contract) {
+            return res.status(404).json({ message: "Invalid contract address" });
+        } 
+
+        const bytecode = await web3.eth.getCode(contract.contractAddress);
+
+        if (bytecode === '0x') {
+            return res.status(404).json({ message: "Contract does not exist at this address" });
+        }
+   
+        const evm = new EVM(bytecode);
+        const disassembledCode = evm.getOpcodes();
+        const functions = evm.getFunctions()
+
+        const decompile = await panoramix.run(bytecode)
+        
+        
+
+        const formattedOpcodes = disassembledCode.map((opcode) => {
+            if (opcode.pushData && opcode.pushData.data) {
+                return `${opcode.name} 0x${opcode.pushData.data.map(x => x.toString(16)).join("")}`;
+            } else {
+                return opcode.name;
+            }
+        });
+
+        return res.status(200).json({
+            success:true,
+            message:"bytecode generated successfully",
+            bytecode: bytecode,
+            opcodes: formattedOpcodes,
+            decompile: decompile,
+            functions:functions,
+
+            status:status?true:false
+        });
+
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
 
 
 
@@ -64,7 +129,7 @@ const getTransactionForChart = async (req, res, next) => {
 
             dateFilter = [{ $match: { createdAt: { $gte: startDate } } }];
 
-       
+
         }
         const transactions = await Transactions.aggregate([
             ...dateFilter,
@@ -250,8 +315,8 @@ const accounts = async (req, res, next) => {
         const holdersAggregate = await Holders.aggregate([
             {
                 $match: { balance: { $gt: 0 } } // exclude accounts with balance 0
-              },
-            
+            },
+
             {
                 $sort: { "balance": sortOrder }
             },
@@ -282,8 +347,8 @@ const accounts = async (req, res, next) => {
         const holdersWithTransactions = holdersAggregate.map(holder => {
             const transactionData = transactionsAggregate.find(data => data._id === holder.address) || { totalTransactions: 0 };
 
-            console.log("balance------:",web3.utils.fromWei(holder.balance,"ether"));
-            const transactionPercentage = ((web3.utils.fromWei(holder.balance,"ether") / 310000000) * 100).toFixed(7);
+            console.log("balance------:", web3.utils.fromWei(holder.balance, "ether"));
+            const transactionPercentage = ((web3.utils.fromWei(holder.balance, "ether") / 310000000) * 100).toFixed(7);
             return {
                 ...holder,
                 totalTransactions: transactionData.totalTransactions,
@@ -386,15 +451,15 @@ const getBlockDetails = async (req, res, next) => {
         let response = {};
 
         if (fetchTransactions) {
-        response = {
-            blockTxns: blockTransactions.map(txn => {
-                const txnObject = txn.toObject();
-                txnObject.createdAt = getElapsedTime(txnObject.createdAt);
-                return txnObject;
-            }),
-            blockCount,
-        };
-    }else {
+            response = {
+                blockTxns: blockTransactions.map(txn => {
+                    const txnObject = txn.toObject();
+                    txnObject.createdAt = getElapsedTime(txnObject.createdAt);
+                    return txnObject;
+                }),
+                blockCount,
+            };
+        } else {
             response = {
                 detailsOfSingleBlock: {
                     ...blockDetails,
@@ -443,7 +508,7 @@ const contactquery = async (req, res, next) => {
 
         await newContactQuery.save()
         await sendQuerySubmissionEmail(name, email, "general Inquiry")
-        res.status(200).json({success:true, newContactQuery, message: "Contact query has been saved successfully" })
+        res.status(200).json({ success: true, newContactQuery, message: "Contact query has been saved successfully" })
     } catch (error) {
         console.error(error);
         next(error)
@@ -464,5 +529,6 @@ module.exports = {
     accounts,
     blocks,
     getBlockDetails,
-    avgBlockSize
+    avgBlockSize,
+    deployedBytecode
 }

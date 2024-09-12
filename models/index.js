@@ -1,7 +1,10 @@
 const mongoose=require("mongoose")
 require('dotenv').config();
 
-let mongourl=process.env.MONGOURL
+let mongourl=process.env.mongourl
+console.log("mongourl",mongourl);
+
+
 
 async function db(){
     try{
@@ -17,5 +20,6 @@ db.transactions = require("./transactions.model.js")
 db.currentBlock = require("./currentBlock.model.js") 
 db.api_key = require("./apikey.model.js")
 db.holder=require('./holder.model.js')
+db.contractVerify=require('./verfiedContract.model.js')
 
 module.exports=db;
