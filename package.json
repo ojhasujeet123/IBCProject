@@ -4,17 +4,19 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node --watch server.js"
   },
   "author": "ojha",
   "license": "ISC",
   "dependencies": {
+    "@nomicfoundation/hardhat-verify": "^2.0.10",
     "bcryptjs": "^2.4.3",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
     "cross-spawn": "^7.0.3",
     "dotenv": "^16.4.5",
     "ethereum-input-data-decoder": "^0.4.2",
+    "ethers": "^6.13.2",
     "evm": "^0.1.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",

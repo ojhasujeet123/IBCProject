@@ -366,10 +366,13 @@ const accountSettings = async (req, res, next) => {
         
         if (email && oldPassword) {
             const correctPassword = await comparePassword(oldPassword, user.password);
+        
             if (!correctPassword) {
                 return res.status(400).json({ message: "The old password is wrong" });
             } else {
+                let hashedPassword =await hashPassword(oldPassword)
                 user.email = email;
+                user.password=hashedPassword
                 await user.save();
                 return res.status(200).json({ success: true, message: "Email updated successfully", user });
             }

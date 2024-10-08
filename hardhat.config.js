@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -110,8 +111,20 @@ module.exports = {
       { version: "0.8.23" },
       { version: "0.8.24" },
       { version: "0.8.25" },
-      { version: "0.8.26" }
+      { version: "0.8.26" },
+      { version: "0.8.27" }
+
     ]
+  },
+  defaultNetwork: 'gtc',
+  networks: {
+    gtc: {
+      url: process.env.RPC_URL, 
+      accounts: process.env.PVT_KEY ? [process.env.PVT_KEY] : [], 
+    },
+  },
+  sourcify: {
+    enabled: true,
   },
   paths: {
     artifacts: './artifacts',

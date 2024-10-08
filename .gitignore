@@ -8,6 +8,7 @@ hardhat.config.js
 /cache
 /artifacts
 /contracts
+contracts
 
 # TypeChain files
 /typechain

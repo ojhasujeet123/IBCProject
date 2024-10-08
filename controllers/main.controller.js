@@ -9,6 +9,7 @@ require('dotenv').config();
 const { Web3 } = require('web3')
 const { EVM } = require("evm");
 const Panoramix = require('like-panoramix')
+const solc=require('solc')
 
 const web3 = new Web3('https://glc-dataseed.glscan.io/')
 const panoramix = new Panoramix(({
@@ -49,6 +50,7 @@ const deployedBytecode = async (req, res, next) => {
         const functions = evm.getFunctions()
 
         const decompile = await panoramix.run(bytecode)
+  
         
         
 
@@ -67,7 +69,6 @@ const deployedBytecode = async (req, res, next) => {
             opcodes: formattedOpcodes,
             decompile: decompile,
             functions:functions,
-
             status:status?true:false
         });
 
@@ -238,7 +239,7 @@ const avgBlockSize = async (req, res, next) => {
                 $match: {
                     createdAt: {
                         $gte: startDate,
-                        $lt: endDate // Using $lt instead of $lte to exclude the end date
+                        $lt: endDate 
                     }
                 }
             },
@@ -249,7 +250,7 @@ const avgBlockSize = async (req, res, next) => {
                     count: { $sum: 1 }
                 }
             },
-            { $sort: { "_id": 1 } }, // Sort by the formatted date in ascending order
+            { $sort: { "_id": 1 } }, 
             {
                 $project: {
                     _id: 0,

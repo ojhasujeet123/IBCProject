@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+console.log("process.env.MAILGUNAUTHENTICATION",process.env.MAILGUNAUTHENTICATION);
 
 
 
@@ -24,9 +25,10 @@ function sendEmail(name,email, otp, type) {
   var request = require('request');
   var options = {
     'method': 'POST',
-    'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+    'url': 'https://api.mailgun.net/v3/info.bitnetto.io/messages',
     'headers': {
-      'Authorization':'Basic YXBpOmVlZWY5NTk3YWRhOGJiZTkyZTk1MDYxMTlmYjQyN2NmLWY2OGEyNmM5LWIwMDU4Zjky'
+      // 'Authorization':'Basic YXBpOmVlZWY5NTk3YWRhOGJiZTkyZTk1MDYxMTlmYjQyN2NmLWY2OGEyNmM5LWIwMDU4Zjky'
+      'Authorization':process.env.MAILGUNAUTHENTICATION
     },
     formData: {
       'from': 'GLSCAN <info@mail-go.site>',
@@ -230,9 +232,10 @@ function sendQuerySubmissionEmail(name, email, query) {
     var request = require('request');
     var options = {
       'method': 'POST',
-      'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+      'url': 'https://api.mailgun.net/v3/info.bitnetto.io/messages',
       'headers': {
-        'Authorization': process.env.MAILGUNAUTHENTICATION
+        // 'Authorization':'Basic YXBpOmVlZWY5NTk3YWRhOGJiZTkyZTk1MDYxMTlmYjQyN2NmLWY2OGEyNmM5LWIwMDU4Zjky'
+        'Authorization':process.env.MAILGUNAUTHENTICATION
       },
       formData: {
         'from': 'GLSCAN <info@mail-go.site>',
@@ -327,9 +330,10 @@ function sendForgotEmail(email,name,newpasword) {
   var request = require('request');
   var options = {
     'method': 'POST',
-    'url': 'https://api.mailgun.net/v3/mail-go.site/messages',
+    'url': 'https://api.mailgun.net/v3/info.bitnetto.io/messages',
     'headers': {
-      'Authorization': process.env.MAILGUNAUTHENTICATION
+      // 'Authorization':'Basic YXBpOmVlZWY5NTk3YWRhOGJiZTkyZTk1MDYxMTlmYjQyN2NmLWY2OGEyNmM5LWIwMDU4Zjky'
+      'Authorization':process.env.MAILGUNAUTHENTICATION
     },
     formData: {
       'from': 'GLSCAN <info@mail-go.site>',

@@ -121,7 +121,7 @@ let Scanblock = async( ) => {
     console.log('its latest block ' , latest) 
     let lastBlock = await CurrentBlock.findOne({});
     // let i =  lastBlock.blockNumber;
-    let i =857035
+    let i =932611
     let endBlock = parseInt(latest);// > (parseInt(i)+ parseInt(200)) ? latest :(i + parseInt(i)+ parseInt(200) ) ;   //(parseFloat(lastBlock.blockNumber) + parseFloat(50)) 
     // endBlock = (endBlock - i) > 200 ? (parseInt(i) + parseInt(200)) : endBlock;
     console.log('now we scan from ' + i + ' to '+ endBlock) 
@@ -241,7 +241,7 @@ let blockInfo = async (blockNumber) => {
      
     
 }
-// Scanblock()
+// Scanblock() 
 
 
 
