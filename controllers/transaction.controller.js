@@ -208,63 +208,63 @@ const transactionController = {
 //GET ALL  TRANSACTION
 
 
-getAllTransactions: async (req, res, next) => {
-    try {
-        
-        const { page = 1, limit = 10 } = req.query;
-        const skip = (page - 1) * limit;
+    getAllTransactions: async (req, res, next) => {
+        try {
+            
+            const { page = 1, limit = 10 } = req.query;
+            const skip = (page - 1) * limit;
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        let today_txns = await Transactions.find({ createdAt: { $gte: today, $lt: new Date(today.valueOf() + 86400000) } }).countDocuments()
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let today_txns = await Transactions.find({ createdAt: { $gte: today, $lt: new Date(today.valueOf() + 86400000) } }).countDocuments()
 
-        const [transactions, totalBlocksNumber, accountHolder, totalTransactions, totalAmountResult] = await Promise.all([
-            Transactions.find({})
-                .sort({ updatedAt: -1 })
-                .skip(skip)
-                .limit(limit )
-                .lean(),
-            Transactions.distinct('blockNumber'),
-            Holders.countDocuments({}),
-            Transactions.countDocuments({}),
-            Transactions.aggregate([
-                {
-                    $group: {
-                        _id: null,
-                        totalAmount: {
-                            $sum: {
-                                $toDecimal: "$value"
+            const [transactions, totalBlocksNumber, accountHolder, totalTransactions, totalAmountResult] = await Promise.all([
+                Transactions.find({})
+                    .sort({ updatedAt: -1 })
+                    .skip(skip)
+                    .limit(limit )
+                    .lean(),
+                Transactions.distinct('blockNumber'),
+                Holders.countDocuments({}),
+                Transactions.countDocuments({}),
+                Transactions.aggregate([
+                    {
+                        $group: {
+                            _id: null,
+                            totalAmount: {
+                                $sum: {
+                                    $toDecimal: "$value"
+                                }
                             }
                         }
                     }
-                }
-            ]).exec(),
-        ]);
+                ]).exec(),
+            ]);
 
-        const totalBlocks = totalBlocksNumber.length;
+            const totalBlocks = totalBlocksNumber.length;
 
-        const transactionsIST = transactions.map(transaction => ({
-            ...transaction,
-            timestamp: getElapsedTime(transaction.timeStamp),
-            createdAt: getElapsedTime(transaction.createdAt),
-            updatedAt: getElapsedTime(transaction.updatedAt),
-        }));
+            const transactionsIST = transactions.map(transaction => ({
+                ...transaction,
+                timestamp: getElapsedTime(transaction.timeStamp),
+                createdAt: getElapsedTime(transaction.createdAt),
+                updatedAt: getElapsedTime(transaction.updatedAt),
+            }));
 
-        const totalAmount = totalAmountResult[0]?.totalAmount || 0;
+            const totalAmount = totalAmountResult[0]?.totalAmount || 0;
 
-        res.status(200).json({
-            today_txns,
-            totalAmount,
-            totalBlocks,
-            accountHolder,
-            totalTransactions,
-            transactions: transactionsIST
-        });
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
-},
+            res.status(200).json({
+                today_txns,
+                totalAmount,
+                totalBlocks,
+                accountHolder,
+                totalTransactions,
+                transactions: transactionsIST
+            });
+        } catch (error) {
+            console.error(error);
+            next(error);
+        }
+    },
 
 
 
@@ -349,5 +349,4 @@ getAllTransactions: async (req, res, next) => {
 
 
 
-module.exports={updateHoldersBalances,...transactionController}
-onController}
+module.exports={...transactionController}
